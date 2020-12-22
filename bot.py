@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from datetime import date
 
 TOKEN = ''
 
@@ -28,20 +29,31 @@ async def on_message(message):
     if message.content.startswith('!Dupa'):
         await message.channel.send("<:happy:789143635093880862>")
 
-
+    if message.content.startswith('!image'):
+        with open('image.jpg', 'rb') as image:
+            await message.channel.send(file=discord.File(image, 'image.jpg'))
 
 
 @client.event
 async def on_member_join(member):
     channel = client.get_channel(790897876192591923)
-    print(f'{member.mention} joined!')
-    await channel.send('hello')
+    msg = f"{member.mention} jesteś {member.guild.member_count} użytkownikiem naszego serwera!" \
+          f"\n" \
+          f"\n" \
+          f"{date.today().strftime('%d/%m/%Y')}"
+    embed = discord.Embed(title='Hello!', description=msg, color=0x00ff00)
+    await channel.send(embed=embed)
 
 
 @client.event
 async def on_member_remove(member):
     channel = client.get_channel(790897876192591923)
-    await channel.send('hello')
+    msg = f"{member.mention} opuścił nas!" \
+          f"\n" \
+          f"\n" \
+          f"{date.today().strftime('%d/%m/%Y')}"
+    embed = discord.Embed(title='Hello!', description=msg, color=0xff0000)
+    await channel.send(embed=embed)
 
 @client.event
 async def on_ready():
