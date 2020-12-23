@@ -10,7 +10,7 @@ import asyncio
 
 from discord.ext.commands import bot
 
-TOKEN = 'NzkwODk5MjIyOTAyODY1OTIw.X-HUTA.zJRqa7qOlg_yhp0vGVLy1WNjOeo'
+TOKEN = ''
 
 intent = discord.Intents.default()
 intent.members = True
