@@ -59,7 +59,9 @@ async def status_task():
     while True:
         await client.change_presence(activity=discord.Game(name='jebanie Dainamo'))
         await asyncio.sleep(10)
-        await client.change_presence(activity=discord.Game(name=f'Aktualnie na {str(len(client.servers))} serwerach'))
+        await client.change_presence(activity=discord.Game(name=f'Aktualnie na X serwerach'))
+        await asyncio.sleep(10)
+        await client.change_presence(activity=discord.Game(name='czuwanie'))
         await asyncio.sleep(10)
 
 @client.event
@@ -67,11 +69,18 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    #await client.change_presence(activity=discord.Game(name="jebanie Dainamo"))
-
     if message.content.startswith('!info'):
         msg = '**Witaj** {0.author.mention}\n Jestem botem stworzonym przez administrację serwera by stanowić ' \
               'autorski zamiennik na innego rodzaju boty!\n *W razie pytań zgłoś się do administracji*\n\n\n'.format(
+            message)
+        datex = f"{date.today().strftime('%d.%m.%Y')}"
+        embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
+        embed.set_thumbnail(url= client.user.avatar_url)
+        embed.add_field(name= '***BOT developed by FAKERS***', value=datex, inline=False)
+        await message.channel.send(embed=embed)
+
+    if message.content.startswith('!command'):
+        msg = '**Witaj** {0.author.mention}\n Stosuj przedrostek !.\nOto wszystkie niezbędne komendy:\n - !hello\n - !powaga\n - !JD\n\n*W razie pytań zgłoś się do administracji*\n\n\n'.format(
             message)
         datex = f"{date.today().strftime('%d.%m.%Y')}"
         embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
