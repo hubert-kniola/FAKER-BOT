@@ -5,22 +5,14 @@ from datetime import date
 import requests
 from PIL import Image, ImageDraw
 from io import BytesIO
-from discord.ext.commands import Bot
 import asyncio
 
-from discord.ext.commands import bot
-
-TOKEN = ''
+TOKEN = 'NzkwODk5MjIyOTAyODY1OTIw.X-HUTA.5iLNvS-c3PkFE1Y-Bj2uYHgjraE'
 
 intent = discord.Intents.default()
 intent.members = True
 client = discord.Client(intents=intent)
-
-
-# def get_nsfw():
-#    response = requests.get
-#    ("https://scrolller.com/r/nsfw")
-#    json_data = json.loads(response.)
+# client = commands.Bot(command_prefix='!')
 
 
 def welcome_mess(avatar):
@@ -39,27 +31,12 @@ def welcome_mess(avatar):
     background.save('welcome.png')
 
 
-def welcome_mess2(avatar):
-    response = requests.get(avatar)
-    img = Image.open(BytesIO(response.content))
-    img.thumbnail((428, 428), Image.ANTIALIAS)
-    with Image.open(r'./background1.png', 'r') as background:
-        with Image.new("L", img.size, 0) as mask:
-            img_w, img_h = img.size
-            bg_w, bg_h = background.size
-            offset = ((bg_w - img_w) // 2, (bg_h - img_h) - 316)
-            mask_draw = ImageDraw.Draw(mask)
-            mask_draw.ellipse([(0, 0), img.size], fill=255)
-            background.paste(img, offset, mask=mask)
-    background.resize((400, 195))
-    background.save('welcome.png')
-
 @client.event
 async def status_task():
     while True:
         await client.change_presence(activity=discord.Game(name='jebanie Dainamo'))
         await asyncio.sleep(10)
-        await client.change_presence(activity=discord.Game(name=f'Aktualnie na X serwerach'))
+        await client.change_presence(activity=discord.Game(name=f'Aktualnie na {len(client.guilds)} serwerach'))
         await asyncio.sleep(10)
         await client.change_presence(activity=discord.Game(name='czuwanie'))
         await asyncio.sleep(10)
@@ -96,7 +73,7 @@ async def on_message(message):
         await message.channel.send("<:powaga:789143924760903751>")
 
     if message.content.startswith('!JD'):
-        msg = 'Jebać {0.author.mention}'.format(message)
+        msg = f'Jebać {message.author.mention}'
         await message.channel.send(msg)
 
     if message.content.startswith('!Dupa'):
@@ -117,11 +94,19 @@ async def on_message(message):
         await message.channel.send(author.avatar_url)
 
     if message.content.startswith('!test'):
-        channel = client.get_channel(790897876192591923)
         author = message.author
         welcome_mess(author.avatar_url)
         with open('welcome.png', 'rb') as welcome:
             await message.channel.send(file=discord.File(filename='welcome.png', fp=welcome))
+
+    if message.content.startswith('!join'):
+        channel = message.author.voice.channel
+        await channel.connect()
+
+    if message.content.startswith('!leave'):
+        for voice_channel in client.voice_clients:
+            if voice_channel.guild == message.guild:
+                await voice_channel.disconnect()
 
 
 @client.event
