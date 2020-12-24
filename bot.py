@@ -7,7 +7,8 @@ from PIL import Image, ImageDraw
 from io import BytesIO
 import asyncio
 
-TOKEN = 'NzkwODk5MjIyOTAyODY1OTIw.X-HUTA.5iLNvS-c3PkFE1Y-Bj2uYHgjraE'
+token_file = open('TOKEN.txt')
+TOKEN = token_file.read()
 
 intent = discord.Intents.default()
 intent.members = True
