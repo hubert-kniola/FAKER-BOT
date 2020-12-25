@@ -1,19 +1,22 @@
 import discord
 import discord.utils
+from discord.utils import get
 from discord.ext import commands
 from datetime import date
 import requests
 from PIL import Image, ImageDraw
 from io import BytesIO
 import asyncio
+import youtube_dl
+import os
 
 token_file = open('TOKEN.txt')
 TOKEN = token_file.read()
 
 intent = discord.Intents.default()
 intent.members = True
-client = discord.Client(intents=intent)
-# client = commands.Bot(command_prefix='!')
+# client = discord.Client(intents=intent)
+client = commands.Bot(command_prefix='!', intents=intent)
 
 
 def welcome_mess(avatar):
@@ -42,73 +45,101 @@ async def status_task():
         await client.change_presence(activity=discord.Game(name='czuwanie'))
         await asyncio.sleep(10)
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
 
-    if message.content.startswith('!info'):
-        msg = '**Witaj** {0.author.mention}\n Jestem botem stworzonym przez administrację serwera by stanowić ' \
-              'autorski zamiennik na innego rodzaju boty!\n *W razie pytań zgłoś się do administracji*\n\n\n'.format(
-            message)
-        datex = f"{date.today().strftime('%d.%m.%Y')}"
-        embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
-        embed.set_thumbnail(url= client.user.avatar_url)
-        embed.add_field(name= '***BOT developed by FAKERS***', value=datex, inline=False)
-        await message.channel.send(embed=embed)
+@client.command()
+async def info(ctx):
+    msg = f'**Witaj** {ctx.author.mention}\n Jestem botem stworzonym przez administrację serwera by stanowić ' \
+          'autorski zamiennik na innego rodzaju boty!\n *W razie pytań zgłoś się do administracji*\n\n\n'
+    datex = f"{date.today().strftime('%d.%m.%Y')}"
+    embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
+    embed.set_thumbnail(url=client.user.avatar_url)
+    embed.add_field(name='***BOT developed by FAKERS***', value=datex, inline=False)
+    await ctx.channel.send(embed=embed)
 
-    if message.content.startswith('!command'):
-        msg = '**Witaj** {0.author.mention}\n Stosuj przedrostek !.\nOto wszystkie niezbędne komendy:\n - !hello\n - !powaga\n - !JD\n\n*W razie pytań zgłoś się do administracji*\n\n\n'.format(
-            message)
-        datex = f"{date.today().strftime('%d.%m.%Y')}"
-        embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
-        embed.set_thumbnail(url= client.user.avatar_url)
-        embed.add_field(name= '***BOT developed by FAKERS***', value=datex, inline=False)
-        await message.channel.send(embed=embed)
 
-    if message.content.startswith('!hello'):
-        msg = 'Hello {0.author.mention}'.format(message)
-        await message.channel.send(msg)
+@client.command()
+async def command(ctx):
+    msg = f'**Witaj** {ctx.author.mention}\n Stosuj przedrostek !.\nOto wszystkie niezbędne komendy:\n - !hello\n - !powaga\n - !JD\n\n*W razie pytań zgłoś się do administracji*\n\n\n'
+    datex = f"{date.today().strftime('%d.%m.%Y')}"
+    embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
+    embed.set_thumbnail(url=client.user.avatar_url)
+    embed.add_field(name='***BOT developed by FAKERS***', value=datex, inline=False)
+    await ctx.channel.send(embed=embed)
 
-    if message.content.startswith('!powaga'):
-        await message.channel.send("<:powaga:789143924760903751>")
 
-    if message.content.startswith('!JD'):
-        msg = f'Jebać {message.author.mention}'
-        await message.channel.send(msg)
+@client.command()
+async def hello(ctx):
+    msg = f'Hello {ctx.author.mention}'
+    await ctx.channel.send(msg)
 
-    if message.content.startswith('!Dupa'):
-        await message.channel.send("<:happy:789143635093880862>")
 
-    if message.content.startswith('!image'):
-        with open('image.jpg', 'rb') as image:
-            await message.channel.send(file=discord.File(image, 'image.jpg'))
+@client.command()
+async def powaga(ctx):
+    await ctx.channel.send("<:powaga:789143924760903751>")
 
-    if message.content.startswith('!msgId'):
-        msg = '<@214056552217182209>\n' \
-              'r u c h a n i e\n' \
-              'sex'
-        await message.channel.send(msg)
 
-    if message.content.startswith('!halo'):
-        author = message.author
-        await message.channel.send(author.avatar_url)
+@client.command()
+async def JD(ctx):
+    msg = f'Jebać {ctx.author.mention}'
+    await ctx.channel.send(msg)
 
-    if message.content.startswith('!test'):
-        author = message.author
-        welcome_mess(author.avatar_url)
-        with open('welcome.png', 'rb') as welcome:
-            await message.channel.send(file=discord.File(filename='welcome.png', fp=welcome))
 
-    if message.content.startswith('!join'):
-        channel = message.author.voice.channel
-        await channel.connect()
+@client.command()
+async def halo(ctx):
+    await ctx.channel.send(ctx.author.avatar_url)
 
-    if message.content.startswith('!leave'):
-        for voice_channel in client.voice_clients:
-            if voice_channel.guild == message.guild:
-                await voice_channel.disconnect()
 
+@client.command()
+async def test(ctx):
+    author = ctx.author
+    welcome_mess(author.avatar_url)
+    with open('welcome.png', 'rb') as welcome:
+        await ctx.channel.send(file=discord.File(filename='welcome.png', fp=welcome))
+
+
+@client.command()
+async def join(ctx):
+    global voice
+    voice = get(client.voice_clients, guild=ctx.guild)
+    await ctx.author.voice.channel.connect()
+
+
+@client.command()
+async def leave(ctx):
+    for voice_channel in client.voice_clients:
+        if voice_channel.guild == ctx.guild:
+            await voice_channel.disconnect()
+
+
+@client.command()
+async def play(ctx, url):
+    file_exists = os.path.isfile('song.mp3')
+    if file_exists:
+        os.remove('song.mp3')
+    voice = get(client.voice_clients, guild=ctx.guild)
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+
+    for file in os.listdir('./'):
+        if file.endswith('.mp3'):
+            name = file
+            os.rename(file, 'song.mp3')
+
+    voice.play(discord.FFmpegPCMAudio('song.mp3'))
+    voice.source = discord.PCMVolumeTransformer(voice.source)
+    voice.source.volume = 0.1
+
+    nname = name.rsplit('-', 2)
+    await ctx.send(f'Playing: {nname[0]} - {nname[1]}')
 
 @client.event
 async def on_member_join(member):
