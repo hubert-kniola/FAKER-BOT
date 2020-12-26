@@ -40,6 +40,8 @@ async def status_task():
     while True:
         await client.change_presence(activity=discord.Game(name='jebanie Dainamo'))
         await asyncio.sleep(10)
+        await client.change_presence(activity=discord.Streaming(name='music', url=''))
+        await asyncio.sleep(10)
         await client.change_presence(activity=discord.Game(name=f'Aktualnie na {len(client.guilds)} serwerach'))
         await asyncio.sleep(10)
         await client.change_presence(activity=discord.Game(name='czuwanie'))
@@ -140,6 +142,18 @@ async def play(ctx, url):
 
     nname = name.rsplit('-', 2)
     await ctx.send(f'Playing: {nname[0]} - {nname[1]}')
+
+
+@client.command()
+async def pause(ctx):
+    voice = get(client.voice_clients, guild=ctx.guild)
+    voice.pause()
+
+
+@client.command()
+async def resume(ctx):
+    voice = get(client.voice_clients, guild=ctx.guild)
+    voice.resume()
 
 @client.event
 async def on_member_join(member):
