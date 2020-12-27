@@ -10,6 +10,7 @@ import asyncio
 import youtube_dl
 import os
 import shutil
+from os import system
 
 token_file = open('TOKEN.txt')
 TOKEN = token_file.read()
@@ -111,6 +112,7 @@ async def test(ctx):
 
 
 @client.command()
+@commands.has_role('» DJ')
 async def join(ctx):
     global voice
     voice = get(client.voice_clients, guild=ctx.guild)
@@ -118,6 +120,7 @@ async def join(ctx):
 
 
 @client.command()
+@commands.has_role('» DJ')
 async def leave(ctx):
     for voice_channel in client.voice_clients:
         if voice_channel.guild == ctx.guild:
@@ -125,12 +128,12 @@ async def leave(ctx):
 
 
 @client.command()
+@commands.has_role('» DJ')
 async def play(ctx, url):
-    def check_queue():
+    async def check_queue():
         if os.path.isdir('./Queue') is True:
             DIR = os.path.abspath(os.path.realpath('Queue'))
             length = len(os.listdir(DIR))
-            still_q = length - 1
             try:
                 first_file = os.listdir(DIR)[0]
             except:
@@ -153,7 +156,7 @@ async def play(ctx, url):
 
                 nname = name.rsplit('-', 1)
                 embed = discord.Embed(title='Playing:', description=nname[0], color=0xfdf800)
-                ctx.send(embed=embed)
+                await ctx.send(embed=embed)
 
             else:
                 queues.clear()
@@ -161,7 +164,7 @@ async def play(ctx, url):
 
     voice = get(client.voice_clients, guild=ctx.guild)
 
-    if voice==None or voice.is_connected() == False:
+    if voice == None or voice.is_connected() == False:
         await ctx.author.voice.channel.connect()
 
         Queue_infile = os.path.isdir('./Queue')
@@ -192,8 +195,13 @@ async def play(ctx, url):
         }],
     }
 
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+    try:
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+    except:
+        c_path = os.path.dirname(os.path.realpath(__file__))
+        system("spotdl -f " + '"' + c_path + '"' + " -s " + url)
+        system(f'spotdl -f \"{c_path}\" -s {url}')
 
     for file in os.listdir('./'):
         if file.endswith('.mp3'):
@@ -211,10 +219,12 @@ async def play(ctx, url):
 
 queues = []
 
+
 @client.command()
+@commands.has_role('» DJ')
 async def queue(ctx, url):
     if os.path.isdir('./Queue') is False:
-       os.mkdir('Queue')
+        os.mkdir('Queue')
     q_num = len(os.listdir(os.path.abspath(os.path.realpath('Queue'))))
     q_num += 1
     add_queue = True
@@ -245,23 +255,27 @@ async def queue(ctx, url):
 
 
 @client.command()
+@commands.has_role('» DJ')
 async def pause(ctx):
     voice = get(client.voice_clients, guild=ctx.guild)
     embed = discord.Embed(title='Paused', color=0xfdf800)
-    await ctx.send(embed=embed)
+    global embed_msg
+    embed_msg = await ctx.send(embed=embed)
     voice.pause()
 
 
 @client.command()
+@commands.has_role('» DJ')
 async def resume(ctx):
     voice = get(client.voice_clients, guild=ctx.guild)
     voice.resume()
+    await embed_msg.delete()
 
 
 @client.command()
+@commands.has_role('» DJ')
 async def skip(ctx):
     voice = get(client.voice_clients, guild=ctx.guild)
-
     if voice and voice.is_playing():
         voice.stop()
 
