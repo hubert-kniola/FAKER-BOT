@@ -9,6 +9,7 @@ from io import BytesIO
 import asyncio
 import youtube_dl
 import os
+import shutil
 
 token_file = open('TOKEN.txt')
 TOKEN = token_file.read()
@@ -38,14 +39,12 @@ def welcome_mess(avatar):
 @client.event
 async def status_task():
     while True:
-        await client.change_presence(activity=discord.Game(name='jebanie Dainamo'))
-        await asyncio.sleep(10)
-        await client.change_presence(activity=discord.Streaming(name='music', url=''))
-        await asyncio.sleep(10)
+        await client.change_presence(activity=discord.Game(name='Jebanie Dainamo'))
+        await asyncio.sleep(60)
         await client.change_presence(activity=discord.Game(name=f'Aktualnie na {len(client.guilds)} serwerach'))
-        await asyncio.sleep(10)
-        await client.change_presence(activity=discord.Game(name='czuwanie'))
-        await asyncio.sleep(10)
+        await asyncio.sleep(60)
+        await client.change_presence(activity=discord.Game(name='Czuwanie'))
+        await asyncio.sleep(60)
 
 
 @client.command()
@@ -92,6 +91,18 @@ async def halo(ctx):
 
 
 @client.command()
+async def task(ctx, zadanie):
+    embed = discord.Embed(title=zadanie, color=0xfdf800)
+    await ctx.send(embed=embed)
+
+
+@client.command()
+async def spam(ctx, msg):
+    for i in range(10):
+        await ctx.send(msg)
+
+
+@client.command()
 async def test(ctx):
     author = ctx.author
     welcome_mess(author.avatar_url)
@@ -115,10 +126,58 @@ async def leave(ctx):
 
 @client.command()
 async def play(ctx, url):
-    file_exists = os.path.isfile('song.mp3')
-    if file_exists:
-        os.remove('song.mp3')
+    def check_queue():
+        if os.path.isdir('./Queue') is True:
+            DIR = os.path.abspath(os.path.realpath('Queue'))
+            length = len(os.listdir(DIR))
+            still_q = length - 1
+            try:
+                first_file = os.listdir(DIR)[0]
+            except:
+                queues.clear()
+                return
+            main_location = os.path.dirname(os.path.realpath(__file__))
+            song_path = os.path.abspath(os.path.realpath('Queue') + '\\' + first_file)
+            if length != 0:
+                if os.path.isfile('song.mp3'):
+                    os.remove('song.mp3')
+                shutil.move(song_path, main_location)
+                for file in os.listdir('./'):
+                    if file.endswith('.mp3'):
+                        os.rename(file, 'song.mp3')
+
+                voice.play(discord.FFmpegPCMAudio('song.mp3'), after=lambda e: check_queue())
+                voice.source = discord.PCMVolumeTransformer(voice.source)
+                voice.source.volume = 1.0
+
+            else:
+                queues.clear()
+                return
+
     voice = get(client.voice_clients, guild=ctx.guild)
+
+    if voice==None or voice.is_connected() == False:
+        await ctx.author.voice.channel.connect()
+
+        Queue_infile = os.path.isdir('./Queue')
+        try:
+            Queue_folder = './Queue'
+            if Queue_infile is True:
+                print()
+                shutil.rmtree(Queue_folder)
+        except:
+            print()
+
+        voice = get(client.voice_clients, guild=ctx.guild)
+
+    if voice.is_playing():
+        await queue(ctx, url)
+        return
+
+    if os.path.isfile('song.mp3'):
+        os.remove('song.mp3')
+        queues.clear()
+
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprocessors': [{
@@ -136,17 +195,55 @@ async def play(ctx, url):
             name = file
             os.rename(file, 'song.mp3')
 
-    voice.play(discord.FFmpegPCMAudio('song.mp3'))
+    voice.play(discord.FFmpegPCMAudio('song.mp3'), after=lambda e: check_queue())
     voice.source = discord.PCMVolumeTransformer(voice.source)
-    voice.source.volume = 0.1
+    voice.source.volume = 1.0
 
-    nname = name.rsplit('-', 2)
-    await ctx.send(f'Playing: {nname[0]} - {nname[1]}')
+    nname = name.rsplit('-', 1)
+    embed = discord.Embed(title='Playing:', description=nname[0], color=0xfdf800)
+    await ctx.send(embed=embed)
+
+
+queues = []
+
+@client.command()
+async def queue(ctx, url):
+    if os.path.isdir('./Queue') is False:
+       os.mkdir('Queue')
+    q_num = len(os.listdir(os.path.abspath(os.path.realpath('Queue'))))
+    q_num += 1
+    add_queue = True
+    while add_queue:
+        if q_num in queues:
+            q_num += 1
+        else:
+            add_queue = False
+            queues.append(q_num)
+
+    queue_path = os.path.abspath(os.path.realpath('Queue') + f'\song{q_num}.%(ext)s')
+
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'quiet': True,
+        'outtmpl': queue_path,
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([url])
+    embed = discord.Embed(title='Queued:', color=0xfdf800)
+    await ctx.send(embed=embed)
 
 
 @client.command()
 async def pause(ctx):
     voice = get(client.voice_clients, guild=ctx.guild)
+    embed = discord.Embed(title='Paused', color=0xfdf800)
+    await ctx.send(embed=embed)
     voice.pause()
 
 
@@ -154,6 +251,7 @@ async def pause(ctx):
 async def resume(ctx):
     voice = get(client.voice_clients, guild=ctx.guild)
     voice.resume()
+
 
 @client.event
 async def on_member_join(member):
