@@ -144,11 +144,16 @@ async def play(ctx, url):
                 shutil.move(song_path, main_location)
                 for file in os.listdir('./'):
                     if file.endswith('.mp3'):
+                        name = file
                         os.rename(file, 'song.mp3')
 
                 voice.play(discord.FFmpegPCMAudio('song.mp3'), after=lambda e: check_queue())
                 voice.source = discord.PCMVolumeTransformer(voice.source)
                 voice.source.volume = 1.0
+
+                nname = name.rsplit('-', 1)
+                embed = discord.Embed(title='Playing:', description=nname[0], color=0xfdf800)
+                ctx.send(embed=embed)
 
             else:
                 queues.clear()
@@ -251,6 +256,14 @@ async def pause(ctx):
 async def resume(ctx):
     voice = get(client.voice_clients, guild=ctx.guild)
     voice.resume()
+
+
+@client.command()
+async def skip(ctx):
+    voice = get(client.voice_clients, guild=ctx.guild)
+
+    if voice and voice.is_playing():
+        voice.stop()
 
 
 @client.event
