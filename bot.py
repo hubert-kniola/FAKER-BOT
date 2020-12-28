@@ -11,6 +11,7 @@ import youtube_dl
 import os
 import shutil
 from os import system
+from youtubesearchpython import Search
 
 token_file = open('TOKEN.txt')
 TOKEN = token_file.read()
@@ -129,7 +130,7 @@ async def leave(ctx):
 
 @client.command()
 @commands.has_role('» DJ')
-async def play(ctx, url):
+async def play(ctx, *url):
     async def check_queue():
         if os.path.isdir('./Queue') is True:
             DIR = os.path.abspath(os.path.realpath('Queue'))
@@ -163,7 +164,10 @@ async def play(ctx, url):
                 return
 
     voice = get(client.voice_clients, guild=ctx.guild)
-
+    whole = ''
+    for word in url:
+        whole += word
+    url = whole
     if voice == None or voice.is_connected() == False:
         await ctx.author.voice.channel.connect()
 
@@ -199,9 +203,10 @@ async def play(ctx, url):
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
     except:
-        c_path = os.path.dirname(os.path.realpath(__file__))
-        system("spotdl -f " + '"' + c_path + '"' + " -s " + url)
-        system(f'spotdl -f \"{c_path}\" -s {url}')
+        allSearch = Search(url, limit=1)
+        ur = "https://www.youtube.com/watch" + (str(allSearch.result()).split("'link': 'https://www.youtube.com/watch"))[1].split("'")[0]
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([ur])
 
     for file in os.listdir('./'):
         if file.endswith('.mp3'):
