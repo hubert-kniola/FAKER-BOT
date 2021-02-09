@@ -12,6 +12,7 @@ import os
 import shutil
 from os import system
 from youtubesearchpython import Search
+from PIL import Image, ImageFont, ImageDraw
 
 token_file = open('TOKEN.txt')
 TOKEN = token_file.read()
@@ -22,18 +23,29 @@ intent.members = True
 client = commands.Bot(command_prefix='!', intents=intent)
 
 
-def welcome_mess(avatar):
-    response = requests.get(avatar)
+def welcome_mess(author):
+    response = requests.get(author.avatar_url)
     img = Image.open(BytesIO(response.content))
-    img.thumbnail((435, 435), Image.ANTIALIAS)
+    img.thumbnail((440, 440), Image.ANTIALIAS)
+    text = 'Hello  ' + author.display_name
     with Image.open(r'./background2.png', 'r') as background:
         with Image.new("L", img.size, 0) as mask:
             img_w, img_h = img.size
             bg_w, bg_h = background.size
-            offset = ((bg_w - img_w) // 2 + 8, (bg_h - img_h) - 214)
+            offset = ((bg_w - img_w) // 2 + 8, (bg_h - img_h) - 212)
             mask_draw = ImageDraw.Draw(mask)
             mask_draw.ellipse([(0, 0), img.size], fill=255)
             background.paste(img, offset, mask=mask)
+            font = ImageFont.truetype('RubikOne-Regular.ttf', 100)
+            draw = ImageDraw.Draw(background)
+            txt_w, txt_h = draw.textsize(text, font=font)
+            text_offset = (bg_w - txt_w)/2, bg_h - 150
+            bold = 4
+            draw.text((text_offset[0] - bold, text_offset[1] - bold), text, font=font, fill=(0,0,0))
+            draw.text((text_offset[0] + bold, text_offset[1] - bold), text, font=font, fill=(0,0,0))
+            draw.text((text_offset[0] - bold, text_offset[1] + bold), text, font=font, fill=(0,0,0))
+            draw.text((text_offset[0] + bold, text_offset[1] + bold), text, font=font, fill=(0,0,0))
+            draw.text(text_offset, text, (255, 255, 255), font=font)
     background.resize((400, 195))
     background.save('welcome.png')
 
@@ -107,7 +119,7 @@ async def spam(ctx, msg):
 @client.command()
 async def test(ctx):
     author = ctx.author
-    welcome_mess(author.avatar_url)
+    welcome_mess(author)
     with open('welcome.png', 'rb') as welcome:
         await ctx.channel.send(file=discord.File(filename='welcome.png', fp=welcome))
 
