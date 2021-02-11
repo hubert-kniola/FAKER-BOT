@@ -125,6 +125,19 @@ async def test(ctx):
 
 
 @client.command()
+async def dm(ctx, userid: str, msg):
+    user = ctx.message.server.get_member(userid)
+    await ctx.message(userid, msg)
+
+
+@client.command()
+async def report(ctx, msg):
+    msgr = f'Powiadomiono administrację'
+    await ctx.channel.send(msgr)
+    admins = client.get_user(214056552217182209) #IDDainamo
+
+
+@client.command()
 @commands.has_role('» DJ')
 async def join(ctx):
     global voice
