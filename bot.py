@@ -26,7 +26,7 @@ client = commands.Bot(command_prefix='!', intents=intent)
 def welcome_mess(author):
     response = requests.get(author.avatar_url)
     img = Image.open(BytesIO(response.content))
-    img.thumbnail((440, 440), Image.ANTIALIAS)
+    img = img.resize((440, 440), Image.ANTIALIAS)
     text = 'Hello  ' + author.display_name
     with Image.open(r'./background2.png', 'r') as background:
         with Image.new("L", img.size, 0) as mask:
@@ -36,18 +36,19 @@ def welcome_mess(author):
             mask_draw = ImageDraw.Draw(mask)
             mask_draw.ellipse([(0, 0), img.size], fill=255)
             background.paste(img, offset, mask=mask)
-            font = ImageFont.truetype('RubikOne-Regular.ttf', 100)
+            font = ImageFont.truetype('fonts/RubikOne-Regular.ttf', 100)
             draw = ImageDraw.Draw(background)
             txt_w, txt_h = draw.textsize(text, font=font)
             text_offset = (bg_w - txt_w)/2, bg_h - 150
             bold = 4
-            draw.text((text_offset[0] - bold, text_offset[1] - bold), text, font=font, fill=(0,0,0))
-            draw.text((text_offset[0] + bold, text_offset[1] - bold), text, font=font, fill=(0,0,0))
-            draw.text((text_offset[0] - bold, text_offset[1] + bold), text, font=font, fill=(0,0,0))
-            draw.text((text_offset[0] + bold, text_offset[1] + bold), text, font=font, fill=(0,0,0))
+            draw.text((text_offset[0] - bold, text_offset[1] - bold), text, font=font, fill=(0, 0, 0))
+            draw.text((text_offset[0] + bold, text_offset[1] - bold), text, font=font, fill=(0, 0, 0))
+            draw.text((text_offset[0] - bold, text_offset[1] + bold), text, font=font, fill=(0, 0, 0))
+            draw.text((text_offset[0] + bold, text_offset[1] + bold), text, font=font, fill=(0, 0, 0))
             draw.text(text_offset, text, (255, 255, 255), font=font)
     background.resize((400, 195))
     background.save('welcome.png')
+
 
 
 @client.event
@@ -215,7 +216,8 @@ async def play(ctx, *url):
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
     except:
-        allSearch = Search(url, limit=1)
+        allSearch = Search(url, limit=2)
+        print(str(allSearch.result()))
         ur = "https://www.youtube.com/watch" + (str(allSearch.result()).split("'link': 'https://www.youtube.com/watch"))[1].split("'")[0]
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([ur])
@@ -297,28 +299,52 @@ async def skip(ctx):
         voice.stop()
 
 
+async def private_welcome_message(member):
+    user = client.get_user(member.id)
+    msg = 'Witamy na serwerze FAKERS!\n' \
+          'Życzymy miłego pobytu.\n' \
+          'W razie problemów skorzystaj z komendy !help\n'
+    embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
+    embed.add_field(name='***BOT developed by FAKERS***', value='', inline=False)
+    await user.send(embed=embed)
+
+
 @client.event
 async def on_member_join(member):
-    channel = client.get_channel(790897876192591923)
-    msg = f"{member.mention} jesteś {member.guild.member_count} użytkownikiem naszego serwera! {member.avatar_url}" \
+    channel = client.get_channel(784084663593205820)
+    msg = f"{member.mention} jesteś {member.guild.member_count} użytkownikiem naszego serwera!" \
           f"\n" \
           f"\n" \
-          f"{date.today().strftime('%d.%m.%Y')}"
+          # f"{date.today().strftime('%d.%m.%Y')}"
     embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
-    embed.set_thumbnail(url=member.avatar_url)
-    await member.add_roles(discord.utils.get(member.guild.roles, name='Essa'))
+    await member.add_roles(discord.utils.get(member.guild.roles, name='» Essa'))
     await channel.send(embed=embed)
+    author = member
+    welcome_mess(author)
+    with open('welcome.png', 'rb') as welcome:
+        await channel.send(file=discord.File(filename='welcome.png', fp=welcome))
+    await private_welcome_message(member)
 
 
 @client.event
 async def on_member_remove(member):
-    channel = client.get_channel(790897876192591923)
+    channel = client.get_channel(784084663593205820)
     msg = f"{member.mention} opuścił nas!" \
           f"\n" \
           f"\n" \
           f"{date.today().strftime('%d.%m.%Y')}"
-    embed = discord.Embed(title='Hello!', description=msg, color=0xff0000)
+    embed = discord.Embed(title='Upsss!', description=msg, color=0xff0000)
+    embed.set_thumbnail(url=member.avatar_url)
     await channel.send(embed=embed)
+
+@client.command()
+async def DM(ctx, msg):
+    msgr = f'Powiadomiono administrację'
+    await ctx.channel.send(msgr)
+    admins = 214056552217182209, 229147897378111488
+    for userID in admins:
+        user = client.get_user(userID)
+        await user.send(msg)
 
 
 @client.event
