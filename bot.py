@@ -39,7 +39,7 @@ def welcome_mess(author):
             font = ImageFont.truetype('fonts/RubikOne-Regular.ttf', 100)
             draw = ImageDraw.Draw(background)
             txt_w, txt_h = draw.textsize(text, font=font)
-            text_offset = (bg_w - txt_w)/2, bg_h - 150
+            text_offset = (bg_w - txt_w) / 2, bg_h - 150
             bold = 4
             draw.text((text_offset[0] - bold, text_offset[1] - bold), text, font=font, fill=(0, 0, 0))
             draw.text((text_offset[0] + bold, text_offset[1] - bold), text, font=font, fill=(0, 0, 0))
@@ -48,7 +48,6 @@ def welcome_mess(author):
             draw.text(text_offset, text, (255, 255, 255), font=font)
     background.resize((400, 195))
     background.save('welcome.png')
-
 
 
 @client.event
@@ -75,7 +74,8 @@ async def info(ctx):
 
 @client.command()
 async def command(ctx):
-    msg = f'**Witaj** {ctx.author.mention}\n Stosuj przedrostek !.\nOto wszystkie niezbędne komendy:\n - !hello\n - !powaga\n - !JD\n\n*W razie pytań zgłoś się do administracji*\n\n\n'
+    msg = f'**Witaj** {ctx.author.mention}\n Stosuj przedrostek !.\nOto wszystkie niezbędne komendy:\n\n----| GENERAL |----\n - !hello\n - !info\n - !powaga\n - !JD' \
+          f'\n - !spam\n - !DM\n----| MUSIC |----\n - !join\n - !skip\n - !leave\n - !queue\n - !pause\n - !resume\n\n*W razie pytań zgłoś się do administracji*\n\n\n'
     datex = f"{date.today().strftime('%d.%m.%Y')}"
     embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
     embed.set_thumbnail(url=client.user.avatar_url)
@@ -103,12 +103,6 @@ async def JD(ctx):
 @client.command()
 async def halo(ctx):
     await ctx.channel.send(ctx.author.avatar_url)
-
-
-@client.command()
-async def task(ctx, zadanie):
-    embed = discord.Embed(title=zadanie, color=0xfdf800)
-    await ctx.send(embed=embed)
 
 
 @client.command()
@@ -218,7 +212,8 @@ async def play(ctx, *url):
     except:
         allSearch = Search(url, limit=2)
         print(str(allSearch.result()))
-        ur = "https://www.youtube.com/watch" + (str(allSearch.result()).split("'link': 'https://www.youtube.com/watch"))[1].split("'")[0]
+        ur = "https://www.youtube.com/watch" + \
+             (str(allSearch.result()).split("'link': 'https://www.youtube.com/watch"))[1].split("'")[0]
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([ur])
 
@@ -315,7 +310,7 @@ async def on_member_join(member):
     msg = f"{member.mention} jesteś {member.guild.member_count} użytkownikiem naszego serwera!" \
           f"\n" \
           f"\n" \
-          # f"{date.today().strftime('%d.%m.%Y')}"
+        # f"{date.today().strftime('%d.%m.%Y')}"
     embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
     await member.add_roles(discord.utils.get(member.guild.roles, name='» Essa'))
     await channel.send(embed=embed)
@@ -337,6 +332,7 @@ async def on_member_remove(member):
     embed.set_thumbnail(url=member.avatar_url)
     await channel.send(embed=embed)
 
+
 @client.command()
 async def DM(ctx, msg):
     msgr = f'Powiadomiono administrację'
@@ -345,6 +341,36 @@ async def DM(ctx, msg):
     for userID in admins:
         user = client.get_user(userID)
         await user.send(msg)
+
+
+@client.command()
+@commands.has_role('»  Admin')
+async def poke(ctx, member, msg):
+    user = client.get_user(member.id)
+    msgr = f'Wysłano'
+    await ctx.channel.send(msgr)
+    await user.send(msg)
+
+
+@client.command()
+@commands.has_role('»  Admin')
+async def emote(ctx):
+    msg = '<:powaga:789143924760903751> - ranga » DJ\n' \
+          '<> - ranga\n' \
+          '<> - ranga'
+    embed = discord.Embed(title='Zareaguj aby otrzymać rangę!', description=msg, color=0xfdf800)
+    channel = client.get_channel(790897876192591923)
+    message = await ctx.channel.send(embed=embed)
+    await discord.Message.add_reaction(message, emoji=':powaga:789143924760903751')
+
+
+@client.event
+async def on_reaction_add(reaction, member):
+    channel = client.get_channel(790897876192591923)
+    if reaction.message.channel.id != channel:
+        return
+    if reaction.emoji.name == 'powaga':
+        await member.add_roles(discord.utils.get(member.guild.roles, name='» DJ'))
 
 
 @client.event
