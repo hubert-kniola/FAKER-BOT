@@ -355,22 +355,42 @@ async def poke(ctx, member, msg):
 @client.command()
 @commands.has_role('»  Admin')
 async def emote(ctx):
-    msg = '<:powaga:789143924760903751> - ranga » DJ\n' \
-          '<> - ranga\n' \
-          '<> - ranga'
+    msg = '<:DJ:813410735283634206> - ranga » DJ\n' \
+          '<:iman:813412758544056360> - ranga » Przyjęty\n' \
+          '<:iwoman:813411955456475177> - ranga » Przyjęta\n' \
+          '<:iheli:813413958207143966> - ranga » Helikopter\n' \
+          '<:irocket:813417496311758870> - ranga » Rocket League\n' \
+          '<:ilol:813416901924356117> - ranga » League of Legends'
     embed = discord.Embed(title='Zareaguj aby otrzymać rangę!', description=msg, color=0xfdf800)
     channel = client.get_channel(790897876192591923)
     message = await ctx.channel.send(embed=embed)
-    await discord.Message.add_reaction(message, emoji=':powaga:789143924760903751')
+    await discord.Message.add_reaction(message, emoji=':DJ:813410735283634206')
+    await discord.Message.add_reaction(message, emoji=':iman:813412758544056360')
+    await discord.Message.add_reaction(message, emoji=':iwoman:813411955456475177')
+    await discord.Message.add_reaction(message, emoji=':iheli:813413958207143966')
+    await discord.Message.add_reaction(message, emoji=':irocket:813417496311758870')
+    await discord.Message.add_reaction(message, emoji=':ilol:813416901924356117')
 
 
 @client.event
 async def on_reaction_add(reaction, member):
     channel = client.get_channel(790897876192591923)
-    if reaction.message.channel.id != channel:
+    #if reaction.message.channel.id != channel:
+    #    return
+    if member.id == 790899222902865920:
         return
-    if reaction.emoji.name == 'powaga':
+    if reaction.emoji.name == 'DJ':
         await member.add_roles(discord.utils.get(member.guild.roles, name='» DJ'))
+    if reaction.emoji.name == 'iman':
+        await member.add_roles(discord.utils.get(member.guild.roles, name='» Przyjęty'))
+    if reaction.emoji.name == 'iwoman':
+        await member.add_roles(discord.utils.get(member.guild.roles, name='» Przyjęta'))
+    if reaction.emoji.name == 'iheli':
+        await member.add_roles(discord.utils.get(member.guild.roles, name='» Helikopter'))
+    if reaction.emoji.name == 'irocket':
+        await member.add_roles(discord.utils.get(member.guild.roles, name='» Rocket League'))
+    if reaction.emoji.name == 'ilol':
+        await member.add_roles(discord.utils.get(member.guild.roles, name='» League of Legends'))
 
 
 @client.event
