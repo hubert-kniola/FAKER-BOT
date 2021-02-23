@@ -32,6 +32,7 @@ async def leave(ctx, client):
 
 async def play(ctx, client, *url):
     global music_list
+    music_list = []
     voice = get(client.voice_clients, guild=ctx.guild)
     whole = ''
     for word in url:
@@ -126,7 +127,13 @@ async def play(ctx, client, *url):
 
         nname = name.rsplit('-', 1)
         embed = discord.Embed(title='Odtwarzam:', description=nname[0], color=COLOR)
-        await ctx.send(embed=embed)
+        message = await ctx.send(embed=embed)
+
+        await discord.Message.add_reaction(message, emoji=':ipause:813867984644866099')
+        await discord.Message.add_reaction(message, emoji=':iplay:813867994903216208')
+        await discord.Message.add_reaction(message, emoji=':iskip:813868004664017004')
+
+
         while voice.is_playing() or voice.is_paused():
             await asyncio.sleep(1)
         os.remove('./song.mp3')
@@ -145,7 +152,11 @@ async def play(ctx, client, *url):
 
         nname = name.rsplit('-', 1)
         embed = discord.Embed(title='Odtwarzam:', description=nname[0], color=COLOR)
-        await ctx.send(embed=embed)
+        message = await ctx.send(embed=embed)
+
+        await discord.Message.add_reaction(message, emoji=':ipause:813867984644866099')
+        await discord.Message.add_reaction(message, emoji=':iplay:813867994903216208')
+        await discord.Message.add_reaction(message, emoji=':iskip:813868004664017004')
         while voice.is_playing() or voice.is_paused():
             await asyncio.sleep(1)
         os.remove('./song.mp3')

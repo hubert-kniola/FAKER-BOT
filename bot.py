@@ -271,8 +271,8 @@ async def emote(ctx):
 @CLIENT.event
 async def on_reaction_add(reaction, member):
     #channel = client.get_channel(790897876192591923)
-    if reaction.message.channel.id != 813417981815947274:
-        return
+    #if reaction.message.channel.id != 813417981815947274:
+    #    return
     if member.id == 790899222902865920:
         return
     if reaction.emoji.name == 'DJ':
@@ -287,6 +287,12 @@ async def on_reaction_add(reaction, member):
         await member.add_roles(discord.utils.get(member.guild.roles, name='» Rocket League'))
     if reaction.emoji.name == 'ilol':
         await member.add_roles(discord.utils.get(member.guild.roles, name='» League of Legends'))
+    if reaction.emoji.name == 'ipause':
+        await pause(reaction.message.channel)
+    if reaction.emoji.name == 'iplay':
+        await resume(reaction.message.channel)
+    if reaction.emoji.name == 'iskip':
+        await skip(reaction.message.channel)
 
 
 @CLIENT.command()
