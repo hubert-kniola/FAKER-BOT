@@ -38,6 +38,9 @@ class Participant:
 
         return sum(points)
 
+    def __repr__(self) -> str:
+        return self.name
+
 
 class Quiz:
     def __init__(self,
@@ -52,8 +55,15 @@ class Quiz:
         self.songs_left = song_count
 
         self.participants: List[Participant] = []
+        self.has_started = False
+
+    def add_participant(self, p: Participant) -> None:
+        if not self.has_started:
+            self.participants.append(p)
 
     def next_round(self, votes: Dict[str, Tuple[str, bool]]) -> bool:
+        self.has_started = True
+
         for p in self.participants:
             try:
                 p.votes.append(votes[p.name])
@@ -68,7 +78,9 @@ class Quiz:
         return True
 
     def summary(self) -> List[Participant]:
-        return sorted(self.participants, key=lambda p: p.get_points(self.qtype))
+        results = map(lambda p: (p.name, p.get_points(self.qtype)), self.participants)
+
+        return enumerate(sorted(results, key=lambda item: item[1]), start=1)
 
     def __repr__(self) -> str:
         return f'{self.name} - {self.qtype.name}'
