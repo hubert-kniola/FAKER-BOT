@@ -12,12 +12,14 @@ async def join(ctx, client):
     global voice
     voice = get(client.voice_clients, guild=ctx.guild)
     await ctx.author.voice.channel.connect()
+    await ctx.message.delete()
 
 
 async def leave(ctx, client):
     for voice_channel in client.voice_clients:
         if voice_channel.guild == ctx.guild:
             await voice_channel.disconnect()
+    await ctx.message.delete()
 
 queues = []
 
@@ -92,9 +94,9 @@ async def play(ctx, client, *url):
                 'fourth' : 3,
                 'fifth' : 4,
             }[opt]
-
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([list[switch(option.emoji.name)]])
+        await message.delete()
 
     for file in os.listdir('./'):
         if file.endswith('.mp3'):
@@ -106,28 +108,32 @@ async def play(ctx, client, *url):
     voice.source.volume = 1.0
 
     nname = name.rsplit('-', 1)
-    embed = discord.Embed(title='Playing:', description=nname[0], color=color)
+    embed = discord.Embed(title='Odtwarzam:', description=nname[0], color=color)
     await ctx.send(embed=embed)
+    await ctx.message.delete()
 
 
 async def pause(ctx, client):
     voice = get(client.voice_clients, guild=ctx.guild)
-    embed = discord.Embed(title='Paused', color=color)
+    embed = discord.Embed(title='Wstrzymano', color=color)
     global embed_msg
     embed_msg = await ctx.send(embed=embed)
     voice.pause()
+    await ctx.message.delete()
 
 
 async def resume(ctx, client):
     voice = get(client.voice_clients, guild=ctx.guild)
     voice.resume()
     await embed_msg.delete()
+    await ctx.message.delete()
 
 
 async def skip(ctx, client):
     voice = get(client.voice_clients, guild=ctx.guild)
     if voice and voice.is_playing():
         voice.stop()
+    await ctx.message.delete()
 
 
 async def queue(ctx, url, client):

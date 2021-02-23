@@ -54,7 +54,7 @@ def welcome_mess(author):
 @client.event
 async def status_task():
     while True:
-        await client.change_presence(activity=discord.Game(name='Jebanie Dainamo'))
+        await client.change_presence(activity=discord.Streaming(name="Jebanie Dainamo", url='https://www.twitch.tv/dainamovsky'))
         await asyncio.sleep(60)
         await client.change_presence(activity=discord.Game(name=f'Aktualnie na {len(client.guilds)} serwerach'))
         await asyncio.sleep(60)
@@ -116,7 +116,7 @@ async def spam(ctx, msg):
 async def test(ctx):
     author = ctx.author
     welcome_mess(author)
-    with open('welcome.png', 'rb') as welcome:
+    with open('welcome.png', 'r+b') as welcome:
         await ctx.channel.send(file=discord.File(filename='welcome.png', fp=welcome))
 
 
@@ -188,7 +188,7 @@ async def on_member_join(member):
     await channel.send(embed=embed)
     author = member
     welcome_mess(author)
-    with open('welcome.png', 'rb') as welcome:
+    with open('welcome.png', 'r+b') as welcome:
         await channel.send(file=discord.File(filename='welcome.png', fp=welcome))
     await private_welcome_message(member)
 
