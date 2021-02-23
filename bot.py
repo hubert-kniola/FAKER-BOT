@@ -2,6 +2,7 @@ import discord
 import requests
 import asyncio
 import music
+import quiz
 
 from discord.ext import commands
 from datetime import date
@@ -325,5 +326,28 @@ async def on_ready():
     CLIENT.loop.create_task(status_task())
     print('------')
 
+
+# QUIZ COMMANDS
+
+QUIZ = None
+
+
+@CLIENT.command()
+@commands.has_role(ROLES['dj'])
+async def start(ctx, *args):
+    global QUIZ
+    if QUIZ or len(args) != 4:
+        await ctx.message.delete()
+        return
+
+    name, qtype, song_count, playlist = args
+    qtype = quiz.QuizTypeEnum.RACE if qtype == 'RACE' else quiz.QuizTypeEnum.STD
+    song_count = int(song_count)
+
+    QUIZ = quiz.Quiz(qtype, name, playlist, song_count)
+
+    await ctx.channel.send(f'Starting quiz: {QUIZ}\nRounds left: {QUIZ.songs_left}')
+
+###
 
 CLIENT.run(TOKEN)

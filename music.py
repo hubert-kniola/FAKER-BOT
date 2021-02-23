@@ -67,6 +67,7 @@ async def play(ctx, client, *url):
                 list3.append(e)
             count += 1
         print(list3)
+
         msg = f'1. {list3[0]}\n' \
               f'2. {list3[1]}\n' \
               f'3. {list3[2]}\n' \
