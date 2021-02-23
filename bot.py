@@ -22,7 +22,7 @@ intent = discord.Intents.default()
 intent.members = True
 # client = discord.Client(intents=intent)
 client = commands.Bot(command_prefix='!', intents=intent)
-
+color = 0x00f0fa
 
 def welcome_mess(author):
     response = requests.get(author.avatar_url)
@@ -67,7 +67,7 @@ async def info(ctx):
     msg = f'**Witaj** {ctx.author.mention}\n Jestem botem stworzonym przez administrację serwera by stanowić ' \
           'autorski zamiennik na innego rodzaju boty!\n *W razie pytań zgłoś się do administracji*\n\n\n'
     datex = f"{date.today().strftime('%d.%m.%Y')}"
-    embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
+    embed = discord.Embed(title='Hello!', description=msg, color=color)
     embed.set_thumbnail(url=client.user.avatar_url)
     embed.add_field(name='***BOT developed by FAKERS***', value=datex, inline=False)
     await ctx.channel.send(embed=embed)
@@ -78,7 +78,7 @@ async def command(ctx):
     msg = f'**Witaj** {ctx.author.mention}\n Stosuj przedrostek !.\nOto wszystkie niezbędne komendy:\n\n----| GENERAL |----\n - !hello\n - !info\n - !powaga\n - !JD' \
           f'\n - !spam\n - !DM\n----| MUSIC |----\n - !join\n - !skip\n - !leave\n - !queue\n - !pause\n - !resume\n\n*W razie pytań zgłoś się do administracji*\n\n\n'
     datex = f"{date.today().strftime('%d.%m.%Y')}"
-    embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
+    embed = discord.Embed(title='Hello!', description=msg, color=color)
     embed.set_thumbnail(url=client.user.avatar_url)
     embed.add_field(name='***BOT developed by FAKERS***', value=datex, inline=False)
     await ctx.channel.send(embed=embed)
@@ -170,8 +170,9 @@ async def private_welcome_message(member):
     msg = 'Witamy na serwerze FAKERS!\n' \
           'Życzymy miłego pobytu.\n' \
           'W razie problemów skorzystaj z komendy !help\n'
-    embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
-    embed.add_field(name='***BOT developed by FAKERS***', value='', inline=False)
+    datex = f"{date.today().strftime('%d.%m.%Y')}"
+    embed = discord.Embed(title='Hello!', description=msg, color=color)
+    embed.add_field(name='***BOT developed by FAKERS***', value=datex, inline=False)
     await user.send(embed=embed)
 
 
@@ -182,7 +183,7 @@ async def on_member_join(member):
           f"\n" \
           f"\n" \
         # f"{date.today().strftime('%d.%m.%Y')}"
-    embed = discord.Embed(title='Hello!', description=msg, color=0xfdf800)
+    embed = discord.Embed(title='Hello!', description=msg, color=color)
     await member.add_roles(discord.utils.get(member.guild.roles, name='» Essa'))
     await channel.send(embed=embed)
     author = member
@@ -199,7 +200,7 @@ async def on_member_remove(member):
           f"\n" \
           f"\n" \
           f"{date.today().strftime('%d.%m.%Y')}"
-    embed = discord.Embed(title='Upsss!', description=msg, color=0xff0000)
+    embed = discord.Embed(title='Upsss!', description=msg, color=color)
     embed.set_thumbnail(url=member.avatar_url)
     await channel.send(embed=embed)
 
@@ -216,10 +217,10 @@ async def DM(ctx, msg):
 
 @client.command()
 @commands.has_role('»  Admin')
-async def poke(ctx, member, msg):
-    user = client.get_user(member.id)
+async def poke(ctx, Id, msg):
+    user = client.get_user(int(Id))
     msgr = f'Wysłano'
-    await ctx.channel.send(msgr)
+    # await ctx.channel.send(msgr)
     await user.send(msg)
 
 
@@ -232,7 +233,7 @@ async def emote(ctx):
           '<:iheli:813413958207143966> - ranga » Helikopter\n' \
           '<:irocket:813417496311758870> - ranga » Rocket League\n' \
           '<:ilol:813416901924356117> - ranga » League of Legends'
-    embed = discord.Embed(title='Zareaguj aby otrzymać rangę!', description=msg, color=0xfdf800)
+    embed = discord.Embed(title='Zareaguj aby otrzymać rangę!', description=msg, color=color)
     channel = client.get_channel(790897876192591923)
     message = await ctx.channel.send(embed=embed)
     await discord.Message.add_reaction(message, emoji=':DJ:813410735283634206')
@@ -262,6 +263,36 @@ async def on_reaction_add(reaction, member):
         await member.add_roles(discord.utils.get(member.guild.roles, name='» Rocket League'))
     if reaction.emoji.name == 'ilol':
         await member.add_roles(discord.utils.get(member.guild.roles, name='» League of Legends'))
+    if reaction.emoji.name == 'first':
+        print('Hubert tu był')
+        return 0
+    if reaction.emoji.name == 'second':
+        return 1
+    if reaction.emoji.name == 'third':
+        return 2
+    if reaction.emoji.name == 'fourth':
+        return 3
+    if reaction.emoji.name == 'fifth':
+        return 4
+
+
+
+@client.command()
+async def emb(ctx, tit, *msg):
+    whole = ''
+    for word in msg:
+        whole += ' ' + word
+    msg = whole
+    datex = f"{date.today().strftime('%d.%m.%Y')}"
+    embed = discord.Embed(title=tit, description=msg, color=color)
+    embed.add_field(name='***BOT developed by FAKERS***', value=datex, inline=False)
+    await ctx.channel.send(embed=embed)
+
+
+@client.command()
+async def gifi(ctx):
+    with open('fakers.gif', 'r+b') as gifi:
+        await ctx.channel.send(file=discord.File(filename='fakers.gif', fp=gifi))
 
 
 @client.event
