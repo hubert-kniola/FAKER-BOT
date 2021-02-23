@@ -2,19 +2,24 @@ import discord
 import youtube_dl
 import os
 import re
+import json
+import asyncio
+import time
 
 from discord.utils import get
 from youtubesearchpython import Search
 
 COLOR = 0x00f0fa
 QUEUES = []
-
+music_list = []
 
 async def join(ctx, client):
     global voice
+    music_list = []
     voice = get(client.voice_clients, guild=ctx.guild)
     await ctx.author.voice.channel.connect()
     await ctx.message.delete()
+
 
 
 async def leave(ctx, client):
@@ -24,13 +29,16 @@ async def leave(ctx, client):
     await ctx.message.delete()
 
 
+
 async def play(ctx, client, *url):
+    global music_list
     voice = get(client.voice_clients, guild=ctx.guild)
     whole = ''
     for word in url:
         whole += word + ' '
     url = whole
     if voice == None or voice.is_connected() == False:
+        music_list = []
         await ctx.author.voice.channel.connect()
 
         voice = get(client.voice_clients, guild=ctx.guild)
@@ -48,9 +56,15 @@ async def play(ctx, client, *url):
         }],
     }
 
+
     try:
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+            info = ydl.extract_info(url, download=False)
+            entries = info['entries']
+            for entry in entries:
+                t = entry['title'], entry['webpage_url']
+                music_list.append(t)
+
     except:
         allSearch = Search(url, limit=5)
         print(str(allSearch.result()))
@@ -82,10 +96,10 @@ async def play(ctx, client, *url):
         await discord.Message.add_reaction(message, emoji=':fourth:813519113354739783')
         await discord.Message.add_reaction(message, emoji=':fifth:813519124865089627')
 
-        def _check(r, u):
+        def _check(m, u):
             return (
-                u == ctx.author
-                # dodać id wiadomości
+                u == ctx.author,
+                m == ctx.message
             )
 
         option, _ = await client.wait_for("reaction_add", timeout=60.0, check=_check)
@@ -101,22 +115,40 @@ async def play(ctx, client, *url):
 
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([list[switch(option.emoji.name)]])
+        for file in os.listdir('./'):
+            if file.endswith('.mp3'):
+                name = file
+                os.rename(file, 'song.mp3')
 
+        voice.play(discord.FFmpegPCMAudio('song.mp3'))
+        voice.source = discord.PCMVolumeTransformer(voice.source)
+        voice.source.volume = 1.0
+
+        nname = name.rsplit('-', 1)
+        embed = discord.Embed(title='Odtwarzam:', description=nname[0], color=COLOR)
+        await ctx.send(embed=embed)
+        while voice.is_playing() or voice.is_paused():
+            await asyncio.sleep(1)
+        os.remove('./song.mp3')
         await message.delete()
 
-    for file in os.listdir('./'):
-        if file.endswith('.mp3'):
-            name = file
-            os.rename(file, 'song.mp3')
+    for tr in music_list:
+        ydl.download([tr[1]])
+        for file in os.listdir('./'):
+            if file.endswith('.mp3'):
+                name = file
+                os.rename(file, 'song.mp3')
 
-    voice.play(discord.FFmpegPCMAudio('song.mp3'))
-    voice.source = discord.PCMVolumeTransformer(voice.source)
-    voice.source.volume = 1.0
+        voice.play(discord.FFmpegPCMAudio('song.mp3'))
+        voice.source = discord.PCMVolumeTransformer(voice.source)
+        voice.source.volume = 1.0
 
-    nname = name.rsplit('-', 1)
-    embed = discord.Embed(title='Odtwarzam:',
-                          description=nname[0], color=COLOR)
-    await ctx.send(embed=embed)
+        nname = name.rsplit('-', 1)
+        embed = discord.Embed(title='Odtwarzam:', description=nname[0], color=COLOR)
+        await ctx.send(embed=embed)
+        while voice.is_playing() or voice.is_paused():
+            await asyncio.sleep(1)
+        os.remove('./song.mp3')
     await ctx.message.delete()
 
 
@@ -143,34 +175,17 @@ async def skip(ctx, client):
     await ctx.message.delete()
 
 
-async def queue(ctx, url, client):
-    if os.path.isdir('./Queue') is False:
-        os.mkdir('Queue')
-    q_num = len(os.listdir(os.path.abspath(os.path.realpath('Queue'))))
-    q_num += 1
-    add_queue = True
-    while add_queue:
-        if q_num in QUEUES:
-            q_num += 1
-        else:
-            add_queue = False
-            QUEUES.append(q_num)
-
-    queue_path = os.path.abspath(
-        os.path.realpath('Queue') + f'\song{q_num}.%(ext)s')
-
+async def queue(ctx, url):
     ydl_opts = {
         'format': 'bestaudio/best',
-        'quiet': True,
-        'outtmpl': queue_path,
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
     }
-
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-    embed = discord.Embed(title='Queued:', color=COLOR)
-    await ctx.send(embed=embed)
+        info = ydl.extract_info(url, download=False)
+        print(info)
+    track = info['title'], info['webpage_url']
+    music_list.append(track)
