@@ -1,12 +1,14 @@
 import discord
-import discord.utils
-from discord.utils import get
 import youtube_dl
 import os
-from youtubesearchpython import Search
 import re
 
-color = 0x00f0fa
+from discord.utils import get
+from youtubesearchpython import Search
+
+COLOR = 0x00f0fa
+QUEUES = []
+
 
 async def join(ctx, client):
     global voice
@@ -20,8 +22,6 @@ async def leave(ctx, client):
         if voice_channel.guild == ctx.guild:
             await voice_channel.disconnect()
     await ctx.message.delete()
-
-queues = []
 
 
 async def play(ctx, client, *url):
@@ -37,7 +37,7 @@ async def play(ctx, client, *url):
 
     if os.path.isfile('song.mp3'):
         os.remove('song.mp3')
-        queues.clear()
+        QUEUES.clear()
 
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -54,7 +54,8 @@ async def play(ctx, client, *url):
     except:
         allSearch = Search(url, limit=5)
         print(str(allSearch.result()))
-        list = re.findall(r'\bhttps://www\.youtube\.com/watch[^\']+\w+', str(allSearch.result()))
+        list = re.findall(
+            r'\bhttps://www\.youtube\.com/watch[^\']+\w+', str(allSearch.result()))
         print(list)
         list2 = re.findall(r'title\': \'[^\']+\w+.', str(allSearch.result()))
         list3 = []
@@ -66,12 +67,14 @@ async def play(ctx, client, *url):
                 list3.append(e)
             count += 1
         print(list3)
+
         msg = f'1. {list3[0]}\n' \
               f'2. {list3[1]}\n' \
               f'3. {list3[2]}\n' \
               f'4. {list3[3]}\n' \
               f'5. {list3[4]}'
-        embed = discord.Embed(title='Wyniki wyszukiwania:', description=msg, color=color)
+        embed = discord.Embed(title='Wyniki wyszukiwania:',
+                              description=msg, color=COLOR)
         message = await ctx.channel.send(embed=embed)
         await discord.Message.add_reaction(message, emoji=':first:813519059081232384')
         await discord.Message.add_reaction(message, emoji=':second:813519081697312819')
@@ -86,16 +89,19 @@ async def play(ctx, client, *url):
             )
 
         option, _ = await client.wait_for("reaction_add", timeout=60.0, check=_check)
+
         def switch(opt):
-            return{
-                'first' : 0,
-                'second' : 1,
-                'third' : 2,
-                'fourth' : 3,
-                'fifth' : 4,
+            return {
+                'first': 0,
+                'second': 1,
+                'third': 2,
+                'fourth': 3,
+                'fifth': 4,
             }[opt]
+
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([list[switch(option.emoji.name)]])
+
         await message.delete()
 
     for file in os.listdir('./'):
@@ -108,14 +114,15 @@ async def play(ctx, client, *url):
     voice.source.volume = 1.0
 
     nname = name.rsplit('-', 1)
-    embed = discord.Embed(title='Odtwarzam:', description=nname[0], color=color)
+    embed = discord.Embed(title='Odtwarzam:',
+                          description=nname[0], color=COLOR)
     await ctx.send(embed=embed)
     await ctx.message.delete()
 
 
 async def pause(ctx, client):
     voice = get(client.voice_clients, guild=ctx.guild)
-    embed = discord.Embed(title='Wstrzymano', color=color)
+    embed = discord.Embed(title='Wstrzymano', color=COLOR)
     global embed_msg
     embed_msg = await ctx.send(embed=embed)
     voice.pause()
@@ -143,13 +150,14 @@ async def queue(ctx, url, client):
     q_num += 1
     add_queue = True
     while add_queue:
-        if q_num in queues:
+        if q_num in QUEUES:
             q_num += 1
         else:
             add_queue = False
-            queues.append(q_num)
+            QUEUES.append(q_num)
 
-    queue_path = os.path.abspath(os.path.realpath('Queue') + f'\song{q_num}.%(ext)s')
+    queue_path = os.path.abspath(
+        os.path.realpath('Queue') + f'\song{q_num}.%(ext)s')
 
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -164,5 +172,5 @@ async def queue(ctx, url, client):
 
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
-    embed = discord.Embed(title='Queued:', color=color)
+    embed = discord.Embed(title='Queued:', color=COLOR)
     await ctx.send(embed=embed)

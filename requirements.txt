@@ -1,0 +1,6 @@
+discord
+youtube_dl
+asyncio
+youtube-search-python
+music
+requests
