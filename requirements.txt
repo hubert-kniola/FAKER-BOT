@@ -5,5 +5,5 @@ youtube-search-python
 music
 requests
 jikanpy
-python-Levenshtein
+fuzzywuzzy
 PyNaCl

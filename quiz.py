@@ -3,7 +3,6 @@ import re
 
 from jikanpy import AioJikan
 from typing import Dict, List, Tuple
-#from Levenshtein import distance
 from fuzzywuzzy import fuzz
 
 
@@ -37,15 +36,17 @@ class Entry:
         self.index = rnd.randint(0, len(anime['opening_themes']) - 1)
         self.element = f"OP {self.index + 1}: {anime['opening_themes'][self.index]}"
 
-    def verify(self, vote: str, bias=5) -> bool:
+    def verify(self, vote: str) -> bool:
         def strip(s):
             return re.sub(r' \t~`.:@#$%^&\+\*;><,\?!-√\(\)', r'', s.lower())
 
         vote = strip(vote)
 
         for title in self.titles:
-            #if distance(strip(title), vote) <= bias:
-            if fuzz.ratio(strip(title), vote) <= bias:
+            if not title:
+                continue
+
+            if fuzz.partial_ratio(strip(title), vote) >= 85 and fuzz.ratio(strip(title), vote) >= 35:
                 return True
 
         return False
