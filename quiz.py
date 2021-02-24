@@ -3,7 +3,8 @@ import re
 
 from jikanpy import AioJikan
 from typing import Dict, List, Tuple
-from Levenshtein import distance
+#from Levenshtein import distance
+from fuzzywuzzy import fuzz
 
 
 class Participant:
@@ -43,7 +44,8 @@ class Entry:
         vote = strip(vote)
 
         for title in self.titles:
-            if distance(strip(title), vote) <= bias:
+            #if distance(strip(title), vote) <= bias:
+            if fuzz.ratio(strip(title), vote) <= bias:
                 return True
 
         return False

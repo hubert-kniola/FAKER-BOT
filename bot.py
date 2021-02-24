@@ -332,16 +332,27 @@ QUIZ = None
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
 async def qstart(ctx, *args):
+    channel = CLIENT.get_channel(790897876192591923)
     global QUIZ
 
+    datex = f"{date.today().strftime('%d.%m.%Y')}"
+    await ctx.message.delete()
+    # await ctx.channel.send(f'Starting quiz: {QUIZ}\nRounds left: {QUIZ.songs_left}\nSelecting ops from {50 * difficulty} anime')
+    msg = """ANIME OP QUIZ
+        - !qstart NAME ROUNDS_TO_PLAY DIFFICULTY (difficulty: n*50 most popular anime on mal to randomly select ops from during the game <1;100>) (ONLY A DJ CAN START THE GAME)
+        - !qjoin (JOIN THE GAME AFTER STARTING ONE)
+        - !qround TIME (time: time in seconds for which an op will play <5; 60>) (ONLY A DJ CAN START A ROUND)
+        - !qv SOME ANIME TITLE (VOTE)
+        - !qstop (ONLY A DJ CAN STOP THE GAME)
+        """
+    embed = discord.Embed(title='Instruction',
+                         description=msg,
+                         color=COLOR)
+    embed.add_field(name='***BOT developed by FAKERS***',
+                    value=datex, inline=False)
+    await ctx.channel.send(embed=embed)
     if QUIZ or len(args) != 3:
-        await ctx.channel.send("""ANIME OP QUIZ
-    * !qstart NAME ROUNDS_TO_PLAY DIFFICULTY (difficulty: n*50 most popular anime on mal to randomly select ops from during the game <1;100>) (ONLY A DJ CAN START THE GAME)
-    * !qjoin (JOIN THE GAME AFTER STARTING ONE)
-    * !qround TIME (time: time in seconds for which an op will play <5; 60>) (ONLY A DJ CAN START A ROUND)
-    * !qv SOME ANIME TITLE (VOTE)
-    * !qstop (ONLY A DJ CAN STOP THE GAME)
-    """)
+        await ctx.channel.send(embed=embed)
         return
 
     name, song_count, difficulty = args
@@ -354,9 +365,13 @@ async def qstart(ctx, *args):
         return
 
     QUIZ = quiz.Quiz(name, song_count, difficulty)
-
+    datex = f"{date.today().strftime('%d.%m.%Y')}"
+    embed = discord.Embed(title=f'Starting quiz: {QUIZ}', description=f'Rounds left: {QUIZ.songs_left}\nSelecting ops from {50 * difficulty} anime', color=COLOR)
+    embed.add_field(name='***BOT developed by FAKERS***',
+                    value=datex, inline=False)
     await ctx.message.delete()
-    await ctx.channel.send(f'Starting quiz: {QUIZ}\nRounds left: {QUIZ.songs_left}\nSelecting ops from {50 * difficulty} anime')
+    #await ctx.channel.send(f'Starting quiz: {QUIZ}\nRounds left: {QUIZ.songs_left}\nSelecting ops from {50 * difficulty} anime')
+    await ctx.channel.send(embed=embed)
 
 
 @CLIENT.command()
@@ -366,10 +381,12 @@ async def qstop(ctx):
     if not QUIZ:
         await ctx.message.delete()
         return
-
-    await ctx.channel.send(f'Quiz finished.\nResults:\n{QUIZ.summary()}\n\n'
+    embed = discord.Embed(title=f'Quiz finished.',
+                          description=f'Results:\n{QUIZ.summary()}\n\n'
                            f'Actual:\n{[x.titles for x in QUIZ.entry_history]}\n\n'
-                           f'Votes:\n{[(x.name, x.get_summary()) for x in QUIZ.participants]}')
+                           f'Votes:\n{[(x.name, x.get_summary()) for x in QUIZ.participants]}',
+                          color=COLOR)
+    await ctx.channel.send(embed=embed)
     QUIZ = None
 
 
@@ -384,7 +401,8 @@ async def qjoin(ctx):
     name = ctx.author.display_name
     QUIZ.add_participant(quiz.Participant(name))
 
-    await ctx.channel.send(f'{name} joined quiz {QUIZ}')
+    embed = discord.Embed(title=f'{name} joined quiz {QUIZ}', description='', color=COLOR)
+    await ctx.channel.send(embed=embed)
 
 
 @CLIENT.command()
@@ -399,16 +417,19 @@ async def qround(ctx, timeout):
     if not QUIZ:
         return
 
-    await ctx.channel.send(f'Round {QUIZ.round} will take {timeout} seconds.\nLOSU LOSU')
+    embed = discord.Embed(f'Round {QUIZ.round} will take {timeout} seconds.\nLOSU LOSU', description='', color=COLOR)
+    await ctx.channel.send(embed=embed)
 
     await QUIZ.new_entry()
     await music.quiz_play(ctx, CLIENT, QUIZ.current_entry.query())
 
-    await ctx.channel.send(f'Round {QUIZ.round} starting now!')
+    embed = discord.Embed(title=f'Round {QUIZ.round} starting now!', description='', color=COLOR)
+    await ctx.channel.send(embed=embed)
     await music.quiz_stop(ctx, CLIENT, timeout)
 
-    await ctx.channel.send(f'It was {QUIZ.current_entry.element} from {QUIZ.current_entry.titles}\n'
-                           f'There are {QUIZ.songs_left} rounds left.')
+    embed = discord.Embed(title='', description=f'It was {QUIZ.current_entry.element} from {QUIZ.current_entry.titles}\n' 
+                                                f'There are {QUIZ.songs_left} rounds left.', color=COLOR)
+    await ctx.channel.send(embed=embed)
 
     if not QUIZ.next_round():
         await qstop(ctx)
@@ -426,7 +447,8 @@ async def qv(ctx, *args):
     if QUIZ.is_participant(name):
         title = ' '.join(args)
         QUIZ.current_votes[name] = (title, QUIZ.current_entry.verify(title))
-        await ctx.channel.send(f'{name} has voted')
+        embed = discord.Embed(title=f'{name} has voted', description='', color=COLOR)
+        await ctx.channel.send(embed=embed)
 
 
 ###
