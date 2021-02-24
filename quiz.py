@@ -28,7 +28,7 @@ class Participant:
 
 class Entry:
     def __init__(self, anime: Dict) -> None:
-        self.titles = [anime['title_english'], anime['title']]
+        self.titles = [anime['title'], anime['title_english']]
 
         opening_amount = len(anime['opening_themes']) - 1
         assert opening_amount >= 0

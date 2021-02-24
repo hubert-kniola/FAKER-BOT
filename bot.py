@@ -340,7 +340,6 @@ QUIZ = None
 
 
 @CLIENT.command()
-@commands.has_role(ROLES['dj'])
 async def qinfo(ctx):
     await ctx.channel.send(embed=info_embed("OP QUIZ Instruction", """
         - !qstart NAME ROUNDS_TO_PLAY DIFFICULTY
@@ -466,7 +465,6 @@ async def qv(ctx, *args):
 
         await ctx.channel.send(embed=info_embed(f'{name} has voted'))
 
-
-###
+### /
 
 CLIENT.run(TOKEN)
