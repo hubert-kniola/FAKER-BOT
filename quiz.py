@@ -2,7 +2,6 @@ import random as rnd
 import re
 
 from jikanpy import AioJikan
-from enum import Enum
 from typing import Dict, List, Tuple
 from Levenshtein import distance
 
@@ -10,6 +9,7 @@ from Levenshtein import distance
 class Participant:
     ''' Zbiera ocenione głosy oddane przez uczestnika.
     '''
+
     def __init__(self, name: str) -> None:
         self.name = name
         self.votes: List[Tuple[str, bool]] = []
