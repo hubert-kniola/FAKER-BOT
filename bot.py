@@ -344,7 +344,7 @@ QUIZ = None
 @commands.has_role(ROLES['dj'])
 async def qinfo(ctx):
     await ctx.channel.send(embed=info_embed("OP QUIZ Instruction", """
-        - !qstart NAME ROUNDS_TO_PLAY DIFFICULTY
+        - !qstart NAME ROUNDS_TO_PLAY (DIFFICULTY|MAL PROFILE NAME)
         - !qjoin
         - !qround TIME
         - !qv SOME ANIME TITLE
@@ -352,7 +352,8 @@ async def qinfo(ctx):
 
         Disclaimer:
         - You need a rank to do quizes.
-        - DIFFICULTY is an integer N which is multiplied 50 times. That numer is the pool of most popular anime from MAL used in game. Ca8 is reasonable.
+        - DIFFICULTY is an integer N which is multiplied 50 times. That numer is the pool of most popular anime from MAL used in game. Ca 8 is reasonable.
+        - MAL PROFILE NAME allows to use a real person's anime list for playing.
         - TIME is the duration in seconds for which the tracks will play. Minimum is 5, maximum is 60.
         - You can vote only while the song is still playing.
         - Voting is done via DMs. You can vote on the starting channel but it will be visible to others.
@@ -365,23 +366,27 @@ async def qstart(ctx, *args):
     global QUIZ
     await ctx.message.delete()
 
-    if QUIZ or len(args) != 3:
+    if not QUIZ and len(args) == 3:
+        name, song_count, diff_or_name = args
+    else:
         return
-
-    name, song_count, difficulty = args
 
     try:
         song_count = int(song_count)
-        difficulty = int(difficulty)
     except Exception:
         await ctx.message.delete()
         return
 
-    QUIZ = quiz.Quiz(name, song_count, difficulty, ctx.channel)
+    try:
+        difficulty = int(diff_or_name)
+        QUIZ = quiz.Quiz(name, song_count, difficulty, ctx.channel)
+
+    except Exception:
+        QUIZ = quiz.Quiz(name, song_count, 1, ctx.channel)
+        QUIZ.profile = diff_or_name
 
     msg = info_embed(f'Starting quiz: {QUIZ}', f"""
         {QUIZ.songs_left} rounds left. 
-        Selecting openings from {50 * difficulty} anime.
         """)
 
     await QUIZ.channel.send(embed=msg)

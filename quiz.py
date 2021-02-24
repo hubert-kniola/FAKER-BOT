@@ -57,20 +57,26 @@ class Entry:
         return f'{self.titles[0]} opening {self.index + 1}'
 
     @staticmethod
-    async def random_async(pages=8):
+    async def random_async(profile, pages=8):
         async with AioJikan() as jikan:
-            pages = 8 if pages < 1 else pages
 
-            page_no = rnd.randint(1, pages)
-            item_no = rnd.randint(0, 49)
+            if profile:
+                person_list = await jikan.user(profile, request='animelist')
+                anime = await jikan.anime(rnd.choice(person_list['anime'])['mal_id'])
 
-            page = await jikan.top('anime', page=page_no, subtype='bypopularity')
-            anime = await jikan.anime(page['top'][item_no]['mal_id'])
+            else:
+                pages = 8 if pages < 1 else pages
+                page_no = rnd.randint(1, pages)
+                item_no = rnd.randint(0, 49)
+
+                page = await jikan.top('anime', page=page_no, subtype='bypopularity')
+                anime = await jikan.anime(page['top'][item_no]['mal_id'])
 
             try:
                 return Entry(anime)
+
             except AssertionError:
-                return await Entry.random_async(pages)
+                return await Entry.random_async(profile, pages)
 
 
 class Quiz:
@@ -92,9 +98,10 @@ class Quiz:
         self.has_started = False
 
         self.channel = channel
+        self.profile: str = None
 
     async def new_entry(self) -> None:
-        self.current_entry = await Entry.random_async(self.difficulty)
+        self.current_entry = await Entry.random_async(self.profile, self.difficulty)
         self.entry_history.append(self.current_entry)
 
     async def send_to_all(self, *args, **kwargs) -> None:
