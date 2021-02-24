@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import youtube_dl
 import os
@@ -154,6 +155,24 @@ async def quiz_play(ctx, client, title):
     voice.play(discord.FFmpegPCMAudio(f_name))
     voice.source = discord.PCMVolumeTransformer(voice.source)
     voice.source.volume = 1.0
+
+
+async def quiz_stop(ctx, client, timeout):
+    await asyncio.sleep(timeout - 5)
+    await ctx.channel.send('5...')
+    await asyncio.sleep(1)
+    await ctx.channel.send('4...')
+    await asyncio.sleep(1)
+    await ctx.channel.send('3...')
+    await asyncio.sleep(1)
+    await ctx.channel.send('2...')
+    await asyncio.sleep(1)
+    await ctx.channel.send('1...')
+    await asyncio.sleep(1)
+
+    voice = get(client.voice_clients, guild=ctx.guild)
+    if voice and voice.is_playing():
+        voice.stop()
 
 
 async def pause(ctx, client):

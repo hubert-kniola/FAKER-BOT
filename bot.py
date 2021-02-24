@@ -1,3 +1,4 @@
+from os import name
 import discord
 import requests
 import asyncio
@@ -336,22 +337,30 @@ QUIZ = None
 @commands.has_role(ROLES['dj'])
 async def qstart(ctx, *args):
     global QUIZ
+
     if QUIZ or len(args) != 3:
-        await ctx.message.delete()
+        await ctx.channel.send("""ANIME OP QUIZ
+    * !qstart NAME ROUNDS_TO_PLAY DIFFICULTY (difficulty: n*50 most popular anime on mal to randomly select ops from during the game <1;100>) (ONLY A DJ CAN START THE GAME)
+    * !qjoin (JOIN THE GAME AFTER STARTING ONE)
+    * !qround TIME (time: time in seconds for which an op will play <5; 60>) (ONLY A DJ CAN START A ROUND)
+    * !qv SOME ANIME TITLE (VOTE)
+    * !qstop (ONLY A DJ CAN STOP THE GAME)
+    """)
         return
 
-    name, qtype, song_count = args
-    qtype = quiz.TypeEnum.RACE if qtype.lower() == 'race' else quiz.TypeEnum.STD
+    name, song_count, difficulty = args
 
     try:
         song_count = int(song_count)
+        difficulty = int(difficulty)
     except Exception:
         await ctx.message.delete()
         return
 
-    QUIZ = quiz.Quiz(qtype, name, song_count)
+    QUIZ = quiz.Quiz(name, song_count, difficulty)
 
-    await ctx.channel.send(f'Starting quiz: {QUIZ}\nRounds left: {QUIZ.songs_left}')
+    await ctx.message.delete()
+    await ctx.channel.send(f'Starting quiz: {QUIZ}\nRounds left: {QUIZ.songs_left}\nSelecting ops from {50 * difficulty} anime')
 
 
 @CLIENT.command()
@@ -362,16 +371,18 @@ async def qstop(ctx):
         await ctx.message.delete()
         return
 
-    await ctx.channel.send(f'Quiz finished.\nResults:\n{QUIZ.summary()}')
+    await ctx.channel.send(f'Quiz finished.\nResults:\n{QUIZ.summary()}\n\n'
+                           f'Actual:\n{[x.titles for x in QUIZ.entry_history]}\n\n'
+                           f'Votes:\n{[(x.name, x.get_summary()) for x in QUIZ.participants]}')
     QUIZ = None
 
 
 @CLIENT.command()
-async def qaddme(ctx):
+async def qjoin(ctx):
     global QUIZ
     await ctx.message.delete()
 
-    if not QUIZ:
+    if not QUIZ or QUIZ.has_started:
         return
 
     name = ctx.author.display_name
@@ -381,30 +392,46 @@ async def qaddme(ctx):
 
 
 @CLIENT.command()
-async def qround(ctx):
+@commands.has_role(ROLES['dj'])
+async def qround(ctx, timeout):
     global QUIZ
     await ctx.message.delete()
 
+    timeout = int(timeout)
+    timeout = timeout if timeout > 5 and timeout < 60 else 60
+
     if not QUIZ:
         return
 
-    await ctx.channel.send(f'LOSU LOSU')
+    await ctx.channel.send(f'Round {QUIZ.round} will take {timeout} seconds.\nLOSU LOSU')
 
-    entry = await quiz.Entry.random_async()
-    await music.quiz_play(ctx, CLIENT, entry.query())
+    await QUIZ.new_entry()
+    await music.quiz_play(ctx, CLIENT, QUIZ.current_entry.query())
 
     await ctx.channel.send(f'Round {QUIZ.round} starting now!')
-    await ctx.channel.send(f'It was {entry.element} from {entry.titles}')
+    await music.quiz_stop(ctx, CLIENT, timeout)
+
+    await ctx.channel.send(f'It was {QUIZ.current_entry.element} from {QUIZ.current_entry.titles}\n'
+                           f'There are {QUIZ.songs_left} rounds left.')
+
+    if not QUIZ.next_round():
+        await qstop(ctx)
 
 
 @CLIENT.command()
-async def qvote(ctx, *args):
+async def qv(ctx, *args):
     global QUIZ
-    if not QUIZ:
-        await ctx.message.delete()
+    await ctx.message.delete()
+
+    if not QUIZ or not QUIZ.current_entry:
         return
 
-    title = ' '.join(args)
+    name = ctx.author.display_name
+    if QUIZ.is_participant(name):
+        title = ' '.join(args)
+        QUIZ.current_votes[name] = (title, QUIZ.current_entry.verify(title))
+        await ctx.channel.send(f'{name} has voted')
+
 
 ###
 
