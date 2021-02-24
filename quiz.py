@@ -1,5 +1,6 @@
 import random as rnd
 import re
+import asyncio
 
 from jikanpy import AioJikan
 from typing import Dict, List, Tuple
@@ -10,9 +11,10 @@ class Participant:
     ''' Zbiera ocenione głosy oddane przez uczestnika.
     '''
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, dm_channel) -> None:
         self.name = name
         self.votes: List[Tuple[str, bool]] = []
+        self.channel = dm_channel
 
     def get_summary(self) -> Tuple[List[str], List[str]]:
         ''' Zwraca wybory gracza, 1 - poprawne, 2 - niepoprawne
@@ -75,7 +77,8 @@ class Quiz:
     def __init__(self,
                  name: str,
                  song_count: int,
-                 difficulty: int) -> None:
+                 difficulty: int,
+                 channel) -> None:
 
         self.name = name
         self.songs_left = song_count
@@ -88,9 +91,14 @@ class Quiz:
         self.entry_history: List[Entry] = []
         self.has_started = False
 
+        self.channel = channel
+
     async def new_entry(self) -> None:
         self.current_entry = await Entry.random_async(self.difficulty)
         self.entry_history.append(self.current_entry)
+
+    async def send_to_all(self, *args, **kwargs) -> None:
+        await asyncio.gather(*[p.channel.send(*args, **kwargs) for p in self.participants])
 
     def add_participant(self, p: Participant) -> None:
         if not self.has_started:

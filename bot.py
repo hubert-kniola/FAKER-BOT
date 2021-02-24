@@ -35,6 +35,7 @@ EMOTES = {
 
 ROLES = {
     'dj': r'» DJ',
+    'quizer': r'» Quizer',
 }
 
 
@@ -340,23 +341,26 @@ QUIZ = None
 
 
 @CLIENT.command()
+@commands.has_role(ROLES['dj'])
 async def qinfo(ctx):
     await ctx.channel.send(embed=info_embed("OP QUIZ Instruction", """
         - !qstart NAME ROUNDS_TO_PLAY DIFFICULTY
         - !qjoin
+        - !qround TIME
         - !qv SOME ANIME TITLE
         - !qstop
 
         Disclaimer:
-        - You need a DJ rank to do quizes.
-        - DIFFICULTY is an integer N which is multiplied 50 times. That numer is the pool of most popular anime from MAL used in game. 8 is reasonable.
+        - You need a rank to do quizes.
+        - DIFFICULTY is an integer N which is multiplied 50 times. That numer is the pool of most popular anime from MAL used in game. Ca8 is reasonable.
         - TIME is the duration in seconds for which the tracks will play. Minimum is 5, maximum is 60.
         - You can vote only while the song is still playing.
+        - Voting is done via DMs. You can vote on the starting channel but it will be visible to others.
         """, footer=True))
 
 
 @CLIENT.command()
-@commands.has_role(ROLES['dj'])
+@commands.has_role(ROLES['quizer'])
 async def qstart(ctx, *args):
     global QUIZ
     await ctx.message.delete()
@@ -373,20 +377,22 @@ async def qstart(ctx, *args):
         await ctx.message.delete()
         return
 
-    QUIZ = quiz.Quiz(name, song_count, difficulty)
+    QUIZ = quiz.Quiz(name, song_count, difficulty, ctx.channel)
 
-    await ctx.channel.send(embed=info_embed(f'Starting quiz: {QUIZ}', f"""
+    msg = info_embed(f'Starting quiz: {QUIZ}', f"""
         {QUIZ.songs_left} rounds left. 
         Selecting openings from {50 * difficulty} anime.
-        """))
+        """)
+
+    await QUIZ.channel.send(embed=msg)
+    await QUIZ.send_to_all(embed=msg)
 
 
 @CLIENT.command()
-@commands.has_role(ROLES['dj'])
-async def qstop(ctx):
+@commands.has_role(ROLES['quizer'])
+async def qstop(_ctx):
     global QUIZ
     if not QUIZ:
-        await ctx.message.delete()
         return
 
     result_str = '\n'.join(
@@ -396,21 +402,29 @@ async def qstop(ctx):
     votes_str = '\n\n'.join(
         [f'{p.name.capitalize()}\'s correct choices are {p.get_summary()[0]}, wrong are {p.get_summary()[1]}.' for p in QUIZ.participants])
 
-    await ctx.channel.send(embed=info_embed(f'Quiz finished', f"""
+    msg = info_embed(f'Quiz finished', f"""
     Results:
     {result_str}
+    """, footer=True)
 
+    await QUIZ.channel.send(embed=msg)
+    await QUIZ.send_to_all(embed=msg)
+
+    await QUIZ.channel.send(f"""
     Correct titles in order:
     {actual_str}
+    """)
 
+    await QUIZ.channel.send(f"""
     Participant's choices:
     {votes_str}
-    """, footer=True))
+    """)
 
     QUIZ = None
 
 
 @CLIENT.command()
+@commands.has_role(ROLES['quizer'])
 async def qjoin(ctx):
     global QUIZ
     await ctx.message.delete()
@@ -419,32 +433,43 @@ async def qjoin(ctx):
         return
 
     name = ctx.author.display_name
-    QUIZ.add_participant(quiz.Participant(name))
+    QUIZ.add_participant(quiz.Participant(name, await ctx.author.create_dm()))
 
-    await ctx.channel.send(embed=info_embed(f'{name} joined quiz {QUIZ}'))
+    msg = info_embed(f'{name} joined quiz {QUIZ}')
+    await QUIZ.channel.send(embed=msg)
+    await QUIZ.send_to_all(embed=msg)
 
 
 @CLIENT.command()
-@commands.has_role(ROLES['dj'])
+@commands.has_role(ROLES['quizer'])
 async def qround(ctx, timeout):
     global QUIZ
     await ctx.message.delete()
 
-    timeout = int(timeout)
-    timeout = timeout if timeout > 5 and timeout < 60 else 60
-
     if not QUIZ:
         return
 
-    await ctx.channel.send(embed=info_embed(f'Round {QUIZ.round} will take {timeout} seconds.\n', 'Preparing...'))
+    timeout = int(timeout)
+    timeout = timeout if timeout > 5 and timeout < 60 else 60
+
+    msg = info_embed(
+        f'Round {QUIZ.round} will take {timeout} seconds.\n', 'Preparing...')
+    await QUIZ.channel.send(embed=msg)
+    await QUIZ.send_to_all(embed=msg)
 
     await QUIZ.new_entry()
     await music.quiz_play(ctx, CLIENT, QUIZ.current_entry.query())
 
-    await ctx.channel.send(embed=info_embed(f'Round {QUIZ.round} starting now!'))
-    await music.quiz_stop(ctx, CLIENT, timeout)
+    msg = info_embed(f'Round {QUIZ.round} starting now!')
+    await QUIZ.channel.send(embed=msg)
+    await QUIZ.send_to_all(embed=msg)
 
-    await ctx.channel.send(embed=info_embed(f'It was {QUIZ.current_entry.element} from {QUIZ.current_entry.titles[0]} aka {QUIZ.current_entry.titles[1]}.\n', f'There are {QUIZ.songs_left} rounds left.'))
+    await music.quiz_stop(ctx, CLIENT, timeout, QUIZ.send_to_all)
+
+    msg = info_embed(
+        f'It was {QUIZ.current_entry.element} from {QUIZ.current_entry.titles[0]} aka {QUIZ.current_entry.titles[1]}.\n', f'There are {QUIZ.songs_left} rounds left.')
+    await QUIZ.channel.send(embed=msg)
+    await QUIZ.send_to_all(embed=msg)
 
     if not QUIZ.next_round():
         await qstop(ctx)
@@ -453,18 +478,21 @@ async def qround(ctx, timeout):
 @CLIENT.command()
 async def qv(ctx, *args):
     global QUIZ
-    await ctx.message.delete()
 
     if not QUIZ or not QUIZ.current_entry:
         return
+
+    if ctx.channel == QUIZ.channel:
+        await ctx.message.delete()
 
     name = ctx.author.display_name
     if QUIZ.is_participant(name):
         title = ' '.join(args)
         QUIZ.current_votes[name] = (title, QUIZ.current_entry.verify(title))
 
-        await ctx.channel.send(embed=info_embed(f'{name} has voted'))
+        await QUIZ.channel.send(embed=info_embed(f'{name} has voted'))
+        await QUIZ.send_to_all(embed=info_embed(f'{name} has voted'))
 
-### /
+#####
 
 CLIENT.run(TOKEN)

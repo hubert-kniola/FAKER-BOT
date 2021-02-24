@@ -201,17 +201,17 @@ async def quiz_play(ctx, client, title):
     voice.source.volume = 1.0
 
 
-async def quiz_stop(ctx, client, timeout):
+async def quiz_stop(ctx, client, timeout, send_delegate):
     await asyncio.sleep(timeout - 5)
-    await ctx.channel.send('5...')
+    await send_delegate('5...')
     await asyncio.sleep(1)
-    await ctx.channel.send('4...')
+    await send_delegate('4...')
     await asyncio.sleep(1)
-    await ctx.channel.send('3...')
+    await send_delegate('3...')
     await asyncio.sleep(1)
-    await ctx.channel.send('2...')
+    await send_delegate('2...')
     await asyncio.sleep(1)
-    await ctx.channel.send('1...')
+    await send_delegate('1...')
     await asyncio.sleep(1)
 
     voice = get(client.voice_clients, guild=ctx.guild)
