@@ -250,8 +250,12 @@ async def DM(ctx, msg):
 
 @CLIENT.command()
 @commands.has_role(ROLES['admin'])
-async def poke(ctx, Id, msg):
+async def poke(ctx, Id, *msg):
     await ctx.message.delete()
+    whole = ''
+    for word in msg:
+        whole += ' ' + word
+    msg = whole
     user = CLIENT.get_user(int(Id))
     msgr = f'Wysłano'
     await ctx.channel.send(msgr)
