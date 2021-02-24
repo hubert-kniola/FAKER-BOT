@@ -22,13 +22,11 @@ async def join(ctx, client):
     await ctx.message.delete()
 
 
-
 async def leave(ctx, client):
     for voice_channel in client.voice_clients:
         if voice_channel.guild == ctx.guild:
             await voice_channel.disconnect()
     await ctx.message.delete()
-
 
 
 async def play(ctx, client, *url):
@@ -57,7 +55,6 @@ async def play(ctx, client, *url):
         }],
     }
 
-
     try:
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -78,7 +75,7 @@ async def play(ctx, client, *url):
         for e in list2:
             if count % 2 == 0:
                 print(e)
-                e = e.removeprefix('title\': \'')
+                e = e.replace('title\': \'', '')
                 list3.append(e)
             count += 1
         print(list3)
@@ -132,7 +129,6 @@ async def play(ctx, client, *url):
         await discord.Message.add_reaction(message, emoji=':ipause:813867984644866099')
         await discord.Message.add_reaction(message, emoji=':iplay:813867994903216208')
         await discord.Message.add_reaction(message, emoji=':iskip:813868004664017004')
-
 
         while voice.is_playing() or voice.is_paused():
             await asyncio.sleep(1)
