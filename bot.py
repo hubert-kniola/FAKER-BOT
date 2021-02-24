@@ -26,6 +26,7 @@ RES_PATH = {
     'bg2': r'./res/background2.png',
     'welcome': r'./res/welcome.png',
     'font': r'./res/RubikOne-Regular.ttf',
+    'gif': r'./res/fakers.gif',
 }
 
 EMOTES = {
@@ -165,7 +166,7 @@ queues = []
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
 async def queue(ctx, url):
-    await music.queue(ctx, url, CLIENT)
+    await music.queue(ctx, url)
 
 
 @CLIENT.command()
@@ -271,8 +272,8 @@ async def emote(ctx):
 @CLIENT.event
 async def on_reaction_add(reaction, member):
     #channel = client.get_channel(790897876192591923)
-    if reaction.message.channel.id != 813417981815947274:
-        return
+    #if reaction.message.channel.id != 813417981815947274:
+    #    return
     if member.id == 790899222902865920:
         return
     if reaction.emoji.name == 'DJ':
@@ -287,17 +288,12 @@ async def on_reaction_add(reaction, member):
         await member.add_roles(discord.utils.get(member.guild.roles, name='» Rocket League'))
     if reaction.emoji.name == 'ilol':
         await member.add_roles(discord.utils.get(member.guild.roles, name='» League of Legends'))
-    if reaction.emoji.name == 'first':
-        print('Hubert tu był')
-        return 0
-    if reaction.emoji.name == 'second':
-        return 1
-    if reaction.emoji.name == 'third':
-        return 2
-    if reaction.emoji.name == 'fourth':
-        return 3
-    if reaction.emoji.name == 'fifth':
-        return 4
+    if reaction.emoji.name == 'ipause':
+        await pause(reaction.message.channel)
+    if reaction.emoji.name == 'iplay':
+        await resume(reaction.message.channel)
+    if reaction.emoji.name == 'iskip':
+        await skip(reaction.message.channel)
 
 
 @CLIENT.command()
@@ -315,7 +311,7 @@ async def emb(ctx, tit, *msg):
 
 @CLIENT.command()
 async def gifi(ctx):
-    with open('fakers.gif', 'r+b') as gifi:
+    with open(RES_PATH['gif'], 'r+b') as gifi:
         await ctx.channel.send(file=discord.File(filename='fakers.gif', fp=gifi))
 
 
