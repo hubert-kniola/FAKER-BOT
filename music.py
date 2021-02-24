@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import youtube_dl
 import os
@@ -34,12 +35,11 @@ async def play(ctx, client, *url):
     global music_list
     music_list = []
     voice = get(client.voice_clients, guild=ctx.guild)
-    whole = ''
-    for word in url:
-        whole += word + ' '
-    url = whole
-    if voice == None or voice.is_connected() == False:
-        music_list = []
+
+    url = ' '.join(url)
+
+    if not voice or not voice.is_connected():
+
         await ctx.author.voice.channel.connect()
 
         voice = get(client.voice_clients, guild=ctx.guild)
@@ -161,6 +161,62 @@ async def play(ctx, client, *url):
             await asyncio.sleep(1)
         os.remove('./song.mp3')
     await ctx.message.delete()
+
+
+async def quiz_play(ctx, client, title):
+    voice = get(client.voice_clients, guild=ctx.guild)
+
+    if not voice or not voice.is_connected():
+        await ctx.author.voice.channel.connect()
+        voice = get(client.voice_clients, guild=ctx.guild)
+
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+
+    search = Search(title, limit=1).result()
+    link = search['result'][0]['link']
+    print(link)
+
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([link])
+
+    f_name = r'quiz.mp3'
+
+    if os.path.isfile(f_name):
+        os.remove(f_name)
+        QUEUES.clear()
+
+    for file_name in os.listdir('./'):
+        if file_name.endswith('.mp3'):
+            os.rename(file_name, f_name)
+
+    voice.play(discord.FFmpegPCMAudio(f_name))
+    voice.source = discord.PCMVolumeTransformer(voice.source)
+    voice.source.volume = 1.0
+
+
+async def quiz_stop(ctx, client, timeout):
+    await asyncio.sleep(timeout - 5)
+    await ctx.channel.send('5...')
+    await asyncio.sleep(1)
+    await ctx.channel.send('4...')
+    await asyncio.sleep(1)
+    await ctx.channel.send('3...')
+    await asyncio.sleep(1)
+    await ctx.channel.send('2...')
+    await asyncio.sleep(1)
+    await ctx.channel.send('1...')
+    await asyncio.sleep(1)
+
+    voice = get(client.voice_clients, guild=ctx.guild)
+    if voice and voice.is_playing():
+        voice.stop()
 
 
 async def pause(ctx, client):

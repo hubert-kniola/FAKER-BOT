@@ -4,3 +4,6 @@ asyncio
 youtube-search-python
 music
 requests
+jikanpy
+python-Levenshtein
+PyNaCl
