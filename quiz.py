@@ -1,8 +1,13 @@
+import random as rnd
+import asyncio
+
+from jikanpy import AioJikan
 from enum import Enum
 from typing import Dict, List, Tuple
+from Levenshtein import distance
 
 
-class QuizTypeEnum(Enum):
+class TypeEnum(Enum):
     ''' Typ quizu:
         * STD - Każdy podaje swoją propozycję, która jest pokazywana na koniec.
         * RACE - Pierwsza osoba która się zgłosi odpowiada. Jeśli nie trafi minusowy punkt i szansa dla innych.
@@ -26,14 +31,14 @@ class Participant:
         '''
         return [song for song, result in self.votes if result], [song for song, result in self.votes if not result]
 
-    def get_points(self, qtype: QuizTypeEnum) -> int:
+    def get_points(self, qtype: TypeEnum) -> int:
         points = []
 
         for _song, result in self.votes:
             if result:
                 points.append(1)
 
-            elif qtype == QuizTypeEnum.RACE:
+            elif qtype == TypeEnum.RACE:
                 points.append(-1)
 
         return sum(points)
@@ -44,15 +49,14 @@ class Participant:
 
 class Quiz:
     def __init__(self,
-                 qtype: QuizTypeEnum,
+                 qtype: TypeEnum,
                  name: str,
-                 playlist: str,
                  song_count: int) -> None:
 
         self.qtype = qtype
         self.name = name
-        self.playlist = playlist
         self.songs_left = song_count
+        self.round = 1
 
         self.participants: List[Participant] = []
         self.has_started = False
@@ -71,6 +75,7 @@ class Quiz:
                 pass
 
         self.songs_left -= 1
+        self.round += 1
 
         if self.songs_left == 0:
             return False
@@ -78,9 +83,47 @@ class Quiz:
         return True
 
     def summary(self) -> List[Participant]:
-        results = map(lambda p: (p.name, p.get_points(self.qtype)), self.participants)
+        results = map(lambda p: (p.name, p.get_points(
+            self.qtype)), self.participants)
 
-        return enumerate(sorted(results, key=lambda item: item[1]), start=1)
+        return list(enumerate(sorted(results, key=lambda item: item[1]), start=1))
 
     def __repr__(self) -> str:
         return f'{self.name} - {self.qtype.name}'
+
+
+class Entry:
+    def __init__(self, anime: Dict) -> None:
+        self.titles = [anime['title_english'], anime['title']]
+        self.index = rnd.randint(0, len(anime['opening_themes']) - 1)
+        self.element = f"OP {self.index + 1}: {anime['opening_themes'][self.index]}"
+
+    def verify(self, vote: str, bias=3) -> bool:
+        for title in self.titles:
+            if distance(title, vote) <= bias:
+                return True
+
+        return False
+
+    def query(self) -> str:
+        return f'{self.titles[0]} opening {self.index + 1}'
+
+    @staticmethod
+    async def random_async():
+        async with AioJikan() as jikan:
+            page_no = rnd.randint(1, 10)
+            item_no = rnd.randint(0, 49)
+
+            page = await jikan.top('anime', page=page_no, subtype='bypopularity')
+            anime = await jikan.anime(page['top'][item_no]['mal_id'])
+
+            return Entry(anime)
+
+
+if __name__ == '__main__':
+    async def main():
+        test = await Entry.random_async()
+
+        print(test)
+
+    asyncio.run(main())

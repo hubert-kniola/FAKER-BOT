@@ -26,11 +26,9 @@ async def leave(ctx, client):
 
 async def play(ctx, client, *url):
     voice = get(client.voice_clients, guild=ctx.guild)
-    whole = ''
-    for word in url:
-        whole += word + ' '
-    url = whole
-    if voice == None or voice.is_connected() == False:
+    url = ' '.join(url)
+
+    if not voice or not voice.is_connected():
         await ctx.author.voice.channel.connect()
 
         voice = get(client.voice_clients, guild=ctx.guild)
@@ -118,6 +116,44 @@ async def play(ctx, client, *url):
                           description=nname[0], color=COLOR)
     await ctx.send(embed=embed)
     await ctx.message.delete()
+
+
+async def quiz_play(ctx, client, title):
+    voice = get(client.voice_clients, guild=ctx.guild)
+
+    if not voice or not voice.is_connected():
+        await ctx.author.voice.channel.connect()
+        voice = get(client.voice_clients, guild=ctx.guild)
+
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+    }
+
+    search = Search(title, limit=1).result()
+    link = search['result'][0]['link']
+    print(link)
+
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([link])
+
+    f_name = r'quiz.mp3'
+
+    if os.path.isfile(f_name):
+        os.remove(f_name)
+        QUEUES.clear()
+
+    for file_name in os.listdir('./'):
+        if file_name.endswith('.mp3'):
+            os.rename(file_name, f_name)
+
+    voice.play(discord.FFmpegPCMAudio(f_name))
+    voice.source = discord.PCMVolumeTransformer(voice.source)
+    voice.source.volume = 1.0
 
 
 async def pause(ctx, client):

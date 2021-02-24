@@ -331,16 +331,17 @@ async def on_ready():
 
 QUIZ = None
 
+
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
 async def qstart(ctx, *args):
     global QUIZ
-    if QUIZ or len(args) != 4:
+    if QUIZ or len(args) != 3:
         await ctx.message.delete()
         return
 
-    name, qtype, song_count, playlist = args
-    qtype = quiz.QuizTypeEnum.RACE if qtype.lower() == 'race' else quiz.QuizTypeEnum.STD
+    name, qtype, song_count = args
+    qtype = quiz.TypeEnum.RACE if qtype.lower() == 'race' else quiz.TypeEnum.STD
 
     try:
         song_count = int(song_count)
@@ -348,7 +349,7 @@ async def qstart(ctx, *args):
         await ctx.message.delete()
         return
 
-    QUIZ = quiz.Quiz(qtype, name, playlist, song_count)
+    QUIZ = quiz.Quiz(qtype, name, song_count)
 
     await ctx.channel.send(f'Starting quiz: {QUIZ}\nRounds left: {QUIZ.songs_left}')
 
@@ -361,8 +362,7 @@ async def qstop(ctx):
         await ctx.message.delete()
         return
 
-    await ctx.channel.send(f'Quiz finished.\nResults:\n{[(i, v) for i, v in QUIZ.summary()]}')
-
+    await ctx.channel.send(f'Quiz finished.\nResults:\n{QUIZ.summary()}')
     QUIZ = None
 
 
@@ -378,6 +378,23 @@ async def qaddme(ctx):
     QUIZ.add_participant(quiz.Participant(name))
 
     await ctx.channel.send(f'{name} joined quiz {QUIZ}')
+
+
+@CLIENT.command()
+async def qround(ctx):
+    global QUIZ
+    await ctx.message.delete()
+
+    if not QUIZ:
+        return
+
+    await ctx.channel.send(f'LOSU LOSU')
+
+    entry = await quiz.Entry.random_async()
+    await music.quiz_play(ctx, CLIENT, entry.query())
+
+    await ctx.channel.send(f'Round {QUIZ.round} starting now!')
+    await ctx.channel.send(f'It was {entry.element} from {entry.titles}')
 
 
 @CLIENT.command()
