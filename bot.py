@@ -271,7 +271,10 @@ async def emote(ctx):
           '<:iheli:813413958207143966> - ranga » Helikopter\n' \
           '<:irocket:813417496311758870> - ranga » Rocket League\n' \
           '<:ilol:813416901924356117> - ranga » League of Legends\n' \
-          '<:imango:814168091109097503> - ranga » Quizer'
+          '<:imango:814168091109097503> - ranga » Quizer\n' \
+          '<:ibdo1:814502384084320329> - ranga » Black Desert\n' \
+          '<:iterraria:814502455651205120> - ranga » Terraria\n' \
+          '<:igta:814502239103221770> - ranga » GTA V'
     embed = discord.Embed(
         title='Zareaguj aby otrzymać rangę!', description=msg, color=COLOR)
     channel = CLIENT.get_channel(790897876192591923)
@@ -283,6 +286,9 @@ async def emote(ctx):
     await discord.Message.add_reaction(message, emoji=':irocket:813417496311758870')
     await discord.Message.add_reaction(message, emoji=':ilol:813416901924356117')
     await discord.Message.add_reaction(message, emoji=':imango:814168091109097503')
+    await discord.Message.add_reaction(message, emoji=':ibdo1:814502384084320329')
+    await discord.Message.add_reaction(message, emoji=':iterraria:814502455651205120')
+    await discord.Message.add_reaction(message, emoji=':igta:814502239103221770')
 
 
 @CLIENT.event
@@ -306,6 +312,12 @@ async def on_reaction_add(reaction, member):
         await member.add_roles(discord.utils.get(member.guild.roles, name='» League of Legends'))
     if reaction.emoji.name == 'imango':
         await member.add_roles(discord.utils.get(member.guild.roles, name='» Quizer'))
+    if reaction.emoji.name == 'ibdo1':
+        await member.add_roles(discord.utils.get(member.guild.roles, name='» Black Desert'))
+    if reaction.emoji.name == 'iterraria':
+        await member.add_roles(discord.utils.get(member.guild.roles, name='» Terraria'))
+    if reaction.emoji.name == 'igta':
+        await member.add_roles(discord.utils.get(member.guild.roles, name='» GTA V'))
     if reaction.emoji.name == 'ipause':
         await pause(reaction.message.channel)
     if reaction.emoji.name == 'iplay':
