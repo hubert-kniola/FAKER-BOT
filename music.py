@@ -30,6 +30,7 @@ async def leave(ctx, client):
 
 
 async def play(ctx, client, *url):
+    await ctx.message.delete()
     global music_list
     music_list = []
     voice = get(client.voice_clients, guild=ctx.guild)
@@ -94,10 +95,10 @@ async def play(ctx, client, *url):
         await discord.Message.add_reaction(message, emoji=':fourth:813519113354739783')
         await discord.Message.add_reaction(message, emoji=':fifth:813519124865089627')
 
-        def _check(m, u):
+        def _check(r, u):
             return (
-                u == ctx.author,
-                m == ctx.message
+                u == ctx.author
+                and r.message.id == message.id
             )
 
         option, _ = await client.wait_for("reaction_add", timeout=60.0, check=_check)
@@ -110,7 +111,8 @@ async def play(ctx, client, *url):
                 'fourth': 3,
                 'fifth': 4,
             }[opt]
-
+        await message.delete()
+        print(option.emoji.name)
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([list[switch(option.emoji.name)]])
         for file in os.listdir('./'):
@@ -133,7 +135,7 @@ async def play(ctx, client, *url):
         while voice.is_playing() or voice.is_paused():
             await asyncio.sleep(1)
         os.remove('./song.mp3')
-        await message.delete()
+        # await message.delete()
 
     for tr in music_list:
         ydl.download([tr[1]])
@@ -156,7 +158,7 @@ async def play(ctx, client, *url):
         while voice.is_playing() or voice.is_paused():
             await asyncio.sleep(1)
         os.remove('./song.mp3')
-    await ctx.message.delete()
+
 
 
 async def quiz_play(ctx, client, title):
@@ -233,7 +235,9 @@ async def resume(ctx, client):
 
 async def skip(ctx, client):
     voice = get(client.voice_clients, guild=ctx.guild)
-    if voice and voice.is_playing():
+    if voice and not voice.is_playing():
+        await embed_msg.delete()
+    if voice:
         voice.stop()
     await ctx.message.delete()
 
@@ -249,6 +253,5 @@ async def queue(ctx, url):
     }
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
-        print(info)
     track = info['title'], info['webpage_url']
     music_list.append(track)

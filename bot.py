@@ -151,20 +151,27 @@ async def test(ctx):
         await ctx.channel.send(file=discord.File(filename=RES_PATH['welcome'], fp=welcome))
 
 
+def check_music_channel(ctx):
+    return ctx.channel.id == 783705034483433483
+
+
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
+@commands.check(check_music_channel)
 async def join(ctx):
     await music.join(ctx, CLIENT)
 
 
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
+@commands.check(check_music_channel)
 async def leave(ctx):
     await music.leave(ctx, CLIENT)
 
 
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
+@commands.check(check_music_channel)
 async def play(ctx, *url):
     await music.play(ctx, CLIENT, *url)
 
@@ -174,24 +181,28 @@ queues = []
 
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
+@commands.check(check_music_channel)
 async def queue(ctx, url):
     await music.queue(ctx, url)
 
 
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
+@commands.check(check_music_channel)
 async def pause(ctx):
     await music.pause(ctx, CLIENT)
 
 
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
+@commands.check(check_music_channel)
 async def resume(ctx):
     await music.resume(ctx, CLIENT)
 
 
 @CLIENT.command()
 @commands.has_role(ROLES['dj'])
+@commands.check(check_music_channel)
 async def skip(ctx):
     await music.skip(ctx, CLIENT)
 
@@ -263,7 +274,7 @@ async def poke(ctx, Id, *msg):
 
 
 @CLIENT.command()
-@commands.has_role('»  Admin')
+@commands.has_role(ROLES['admin'])
 async def emote(ctx):
     msg = '<:DJ:813410735283634206> - ranga » DJ\n' \
           '<:iman:813412758544056360> - ranga » Przyjęty\n' \
@@ -293,37 +304,36 @@ async def emote(ctx):
 
 @CLIENT.event
 async def on_reaction_add(reaction, member):
-    # channel = client.get_channel(790897876192591923)
-    # if reaction.message.channel.id != 813417981815947274:
-    #    return
     if member.id == 790899222902865920:
         return
-    if reaction.emoji.name == 'DJ':
-        await member.add_roles(discord.utils.get(member.guild.roles, name=ROLES['dj']))
-    if reaction.emoji.name == 'iman':
-        await member.add_roles(discord.utils.get(member.guild.roles, name='» Przyjęty'))
-    if reaction.emoji.name == 'iwoman':
-        await member.add_roles(discord.utils.get(member.guild.roles, name='» Przyjęta'))
-    if reaction.emoji.name == 'iheli':
-        await member.add_roles(discord.utils.get(member.guild.roles, name='» Helikopter'))
-    if reaction.emoji.name == 'irocket':
-        await member.add_roles(discord.utils.get(member.guild.roles, name='» Rocket League'))
-    if reaction.emoji.name == 'ilol':
-        await member.add_roles(discord.utils.get(member.guild.roles, name='» League of Legends'))
-    if reaction.emoji.name == 'imango':
-        await member.add_roles(discord.utils.get(member.guild.roles, name='» Quizer'))
-    if reaction.emoji.name == 'ibdo1':
-        await member.add_roles(discord.utils.get(member.guild.roles, name='» Black Desert'))
-    if reaction.emoji.name == 'iterraria':
-        await member.add_roles(discord.utils.get(member.guild.roles, name='» Terraria'))
-    if reaction.emoji.name == 'igta':
-        await member.add_roles(discord.utils.get(member.guild.roles, name='» GTA V'))
-    if reaction.emoji.name == 'ipause':
-        await pause(reaction.message.channel)
-    if reaction.emoji.name == 'iplay':
-        await resume(reaction.message.channel)
-    if reaction.emoji.name == 'iskip':
-        await skip(reaction.message.channel)
+    if reaction.message.channel.id == 813417981815947274:
+        if reaction.emoji.name == 'DJ':
+            await member.add_roles(discord.utils.get(member.guild.roles, name=ROLES['dj']))
+        if reaction.emoji.name == 'iman':
+            await member.add_roles(discord.utils.get(member.guild.roles, name='» Przyjęty'))
+        if reaction.emoji.name == 'iwoman':
+            await member.add_roles(discord.utils.get(member.guild.roles, name='» Przyjęta'))
+        if reaction.emoji.name == 'iheli':
+            await member.add_roles(discord.utils.get(member.guild.roles, name='» Helikopter'))
+        if reaction.emoji.name == 'irocket':
+            await member.add_roles(discord.utils.get(member.guild.roles, name='» Rocket League'))
+        if reaction.emoji.name == 'ilol':
+            await member.add_roles(discord.utils.get(member.guild.roles, name='» League of Legends'))
+        if reaction.emoji.name == 'imango':
+            await member.add_roles(discord.utils.get(member.guild.roles, name='» Quizer'))
+        if reaction.emoji.name == 'ibdo1':
+            await member.add_roles(discord.utils.get(member.guild.roles, name='» Black Desert'))
+        if reaction.emoji.name == 'iterraria':
+            await member.add_roles(discord.utils.get(member.guild.roles, name='» Terraria'))
+        if reaction.emoji.name == 'igta':
+            await member.add_roles(discord.utils.get(member.guild.roles, name='» GTA V'))
+    if reaction.message.channel.id == 783705034483433483:
+        if reaction.emoji.name == 'ipause':
+            await pause(reaction.message.channel)
+        if reaction.emoji.name == 'iplay':
+            await resume(reaction.message.channel)
+        if reaction.emoji.name == 'iskip':
+            await skip(reaction.message.channel)
 
 
 @CLIENT.command()
@@ -370,8 +380,13 @@ def info_embed(title, text='', footer=False):
 QUIZ = None
 
 
+def check_quiz_channel(ctx):
+    return ctx.channel.id == 814151444021903410
+
+
 @CLIENT.command()
-@commands.has_role(ROLES['dj'])
+@commands.has_role(ROLES['quizer'])
+@commands.check(check_quiz_channel)
 async def qinfo(ctx):
     await ctx.channel.send(embed=info_embed("OP QUIZ Instruction", """
         - !qstart NAME ROUNDS_TO_PLAY (DIFFICULTY|MAL PROFILE NAME)
@@ -392,6 +407,7 @@ async def qinfo(ctx):
 
 @CLIENT.command()
 @commands.has_role(ROLES['quizer'])
+@commands.check(check_quiz_channel)
 async def qstart(ctx, *args):
     global QUIZ
     await ctx.message.delete()
@@ -425,6 +441,7 @@ async def qstart(ctx, *args):
 
 @CLIENT.command()
 @commands.has_role(ROLES['quizer'])
+@commands.check(check_quiz_channel)
 async def qstop(_ctx):
     global QUIZ
     if not QUIZ:
@@ -462,6 +479,7 @@ async def qstop(_ctx):
 
 @CLIENT.command()
 @commands.has_role(ROLES['quizer'])
+@commands.check(check_quiz_channel)
 async def qjoin(ctx):
     global QUIZ
     await ctx.message.delete()
@@ -479,6 +497,7 @@ async def qjoin(ctx):
 
 @CLIENT.command()
 @commands.has_role(ROLES['quizer'])
+@commands.check(check_quiz_channel)
 async def qround(ctx, timeout):
     global QUIZ
     await ctx.message.delete()
