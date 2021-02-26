@@ -1,2 +1,4 @@
 # FAKER-BOT
-Fully functioned discord bot for discord server
+
+Fully functional discord bot for our discord server.
+
