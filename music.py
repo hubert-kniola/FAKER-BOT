@@ -3,20 +3,19 @@ import discord
 import youtube_dl
 import os
 import re
-import json
 import asyncio
-import time
 
 from discord.utils import get
 from youtubesearchpython import Search
 
 COLOR = 0x00f0fa
-QUEUES = []
-music_list = []
+MUSIC_LIST = []
+
 
 async def join(ctx, client):
     global voice
-    music_list = []
+    MUSIC_LIST.clear()
+
     voice = get(client.voice_clients, guild=ctx.guild)
     await ctx.author.voice.channel.connect()
     await ctx.message.delete()
@@ -31,21 +30,15 @@ async def leave(ctx, client):
 
 async def play(ctx, client, *url):
     await ctx.message.delete()
-    global music_list
-    music_list = []
+    MUSIC_LIST.clear()
+
     voice = get(client.voice_clients, guild=ctx.guild)
 
     url = ' '.join(url)
 
     if not voice or not voice.is_connected():
-
         await ctx.author.voice.channel.connect()
-
         voice = get(client.voice_clients, guild=ctx.guild)
-
-    if os.path.isfile('song.mp3'):
-        os.remove('song.mp3')
-        QUEUES.clear()
 
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -54,6 +47,7 @@ async def play(ctx, client, *url):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
+        'outtmpl': r'./song.webm',
     }
 
     try:
@@ -62,7 +56,7 @@ async def play(ctx, client, *url):
             entries = info['entries']
             for entry in entries:
                 t = entry['title'], entry['webpage_url']
-                music_list.append(t)
+                MUSIC_LIST.append(t)
 
     except:
         allSearch = Search(url, limit=5)
@@ -113,19 +107,17 @@ async def play(ctx, client, *url):
             }[opt]
         await message.delete()
         print(option.emoji.name)
+        
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([list[switch(option.emoji.name)]])
-        for file in os.listdir('./'):
-            if file.endswith('.mp3'):
-                name = file
-                os.rename(file, 'song.mp3')
-
+            
         voice.play(discord.FFmpegPCMAudio('song.mp3'))
         voice.source = discord.PCMVolumeTransformer(voice.source)
         voice.source.volume = 1.0
 
-        nname = name.rsplit('-', 1)
-        embed = discord.Embed(title='Odtwarzam:', description=nname[0], color=COLOR)
+        nname = name.rsplit('-', 1) # TODO: co to za zmienna 'name'?
+        embed = discord.Embed(title='Odtwarzam:',
+                              description=nname[0], color=COLOR)
         message = await ctx.send(embed=embed)
 
         await discord.Message.add_reaction(message, emoji=':ipause:813867984644866099')
@@ -134,22 +126,19 @@ async def play(ctx, client, *url):
 
         while voice.is_playing() or voice.is_paused():
             await asyncio.sleep(1)
-        os.remove('./song.mp3')
-        # await message.delete()
 
-    for tr in music_list:
-        ydl.download([tr[1]])
-        for file in os.listdir('./'):
-            if file.endswith('.mp3'):
-                name = file
-                os.rename(file, 'song.mp3')
+        os.remove('./song.mp3')
+
+    for tr in MUSIC_LIST:
+        ydl.download([tr[1]]) # TODO: skad to 'ydl'? to z linijki 119 już nie istnieje
 
         voice.play(discord.FFmpegPCMAudio('song.mp3'))
         voice.source = discord.PCMVolumeTransformer(voice.source)
         voice.source.volume = 1.0
 
         nname = name.rsplit('-', 1)
-        embed = discord.Embed(title='Odtwarzam:', description=nname[0], color=COLOR)
+        embed = discord.Embed(title='Odtwarzam:',
+                              description=nname[0], color=COLOR)
         message = await ctx.send(embed=embed)
 
         await discord.Message.add_reaction(message, emoji=':ipause:813867984644866099')
@@ -157,8 +146,8 @@ async def play(ctx, client, *url):
         await discord.Message.add_reaction(message, emoji=':iskip:813868004664017004')
         while voice.is_playing() or voice.is_paused():
             await asyncio.sleep(1)
-        os.remove('./song.mp3')
 
+        os.remove('./song.mp3')
 
 
 async def quiz_play(ctx, client, title):
@@ -175,26 +164,16 @@ async def quiz_play(ctx, client, title):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
+        'outtmpl': r'./quiz.webm',
     }
 
     search = Search(title, limit=1).result()
     link = search['result'][0]['link']
-    print(link)
 
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([link])
 
-    f_name = r'quiz.mp3'
-
-    if os.path.isfile(f_name):
-        os.remove(f_name)
-        QUEUES.clear()
-
-    for file_name in os.listdir('./'):
-        if file_name.endswith('.mp3'):
-            os.rename(file_name, f_name)
-
-    voice.play(discord.FFmpegPCMAudio(f_name))
+    voice.play(discord.FFmpegPCMAudio(r'./quiz.mp3'))
     voice.source = discord.PCMVolumeTransformer(voice.source)
     voice.source.volume = 1.0
 
@@ -215,6 +194,8 @@ async def quiz_stop(ctx, client, timeout, send_delegate):
     voice = get(client.voice_clients, guild=ctx.guild)
     if voice and voice.is_playing():
         voice.stop()
+
+    os.remove(r'./quiz.mp3')
 
 
 async def pause(ctx, client):
@@ -254,4 +235,4 @@ async def queue(ctx, url):
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
     track = info['title'], info['webpage_url']
-    music_list.append(track)
+    MUSIC_LIST.append(track)
