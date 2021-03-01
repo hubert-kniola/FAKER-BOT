@@ -10,13 +10,13 @@ from datetime import date
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 
-token_file = open('TOKEN1.txt')
+token_file = open('TOKEN.txt')
 TOKEN = token_file.read()
 
 INTENT = discord.Intents.default()
 INTENT.members = True
 # client = discord.Client(intents=intent)
-CLIENT = commands.Bot(command_prefix='.', intents=INTENT)
+CLIENT = commands.Bot(command_prefix='!', intents=INTENT)
 COLOR = 0x00f0fa
 
 RES_PATH = {
@@ -39,7 +39,7 @@ ROLES = {
 }
 
 CHANNELS = {
-    'music': 790897876192591923,
+    'music': 783705034483433483,
     'quiz': 814151444021903410,
 }
 
@@ -332,7 +332,7 @@ async def on_reaction_add(reaction, member):
             await member.add_roles(discord.utils.get(member.guild.roles, name='» Terraria'))
         if reaction.emoji.name == 'igta':
             await member.add_roles(discord.utils.get(member.guild.roles, name='» GTA V'))
-    if reaction.message.channel.id == 783705034483433483:
+    if reaction.message.channel.id == CHANNELS['music']:
         if reaction.emoji.name == 'ipause':
             await pause(reaction.message.channel)
         if reaction.emoji.name == 'iplay':

@@ -117,9 +117,8 @@ async def play(ctx, client, *url):
         voice.source = discord.PCMVolumeTransformer(voice.source)
         voice.source.volume = 1.0
 
-        nname = name.rsplit('-', 1) # TODO: co to za zmienna 'name'?
         embed = discord.Embed(title='Odtwarzam:',
-                              description=nname[0], color=COLOR)
+                              description=list[switch(option.emoji.name)], color=COLOR)
         message = await ctx.send(embed=embed)
 
         await discord.Message.add_reaction(message, emoji=':ipause:813867984644866099')
@@ -138,9 +137,8 @@ async def play(ctx, client, *url):
         voice.source = discord.PCMVolumeTransformer(voice.source)
         voice.source.volume = 1.0
 
-        nname = name.rsplit('-', 1)
         embed = discord.Embed(title='Odtwarzam:',
-                              description=nname[0], color=COLOR)
+                              description=tr[0], color=COLOR)
         message = await ctx.send(embed=embed)
 
         await discord.Message.add_reaction(message, emoji=':ipause:813867984644866099')
