@@ -57,7 +57,9 @@ async def play(ctx, client, *url):
             for entry in entries:
                 t = entry['title'], entry['webpage_url']
                 MUSIC_LIST.append(t)
-
+    except KeyError:
+        t = info['title'], info['webpage_url']
+        MUSIC_LIST.append(t)
     except:
         allSearch = Search(url, limit=5)
         print(str(allSearch.result()))

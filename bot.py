@@ -10,13 +10,13 @@ from datetime import date
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 
-token_file = open('TOKEN.txt')
+token_file = open('TOKEN1.txt')
 TOKEN = token_file.read()
 
 INTENT = discord.Intents.default()
 INTENT.members = True
 # client = discord.Client(intents=intent)
-CLIENT = commands.Bot(command_prefix='!', intents=INTENT)
+CLIENT = commands.Bot(command_prefix='.', intents=INTENT)
 COLOR = 0x00f0fa
 
 RES_PATH = {
@@ -36,6 +36,11 @@ ROLES = {
     'dj': r'» DJ',
     'quizer': r'» Quizer',
     'admin': r'»  Admin',
+}
+
+CHANNELS = {
+    'music': 790897876192591923,
+    'quiz': 814151444021903410,
 }
 
 
@@ -152,7 +157,7 @@ async def test(ctx):
 
 
 def check_music_channel(ctx):
-    return ctx.channel.id == 783705034483433483
+    return ctx.channel.id == CHANNELS['music']
 
 
 @CLIENT.command()
@@ -163,7 +168,7 @@ async def join(ctx):
 
 
 @CLIENT.command()
-@commands.has_role(ROLES['dj'])
+@commands.has_role(ROLES['dj'] or ROLES['quizer'])
 @commands.check(check_music_channel)
 async def leave(ctx):
     await music.leave(ctx, CLIENT)
@@ -381,7 +386,7 @@ QUIZ = None
 
 
 def check_quiz_channel(ctx):
-    return ctx.channel.id == 814151444021903410
+    return ctx.channel.id == CHANNELS['quiz']
 
 
 @CLIENT.command()
